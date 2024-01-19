@@ -71,9 +71,12 @@ export default class Gameplay implements State {
     initialize(): void {}
     onPush(): void {
         speak("Welcome!");
+        this.player.updateListenerPosition();
     }
     onCover(): void {}
-    onUncover(): void {}
+    onUncover(): void {
+        this.player.updateListenerPosition();
+    }
     onPop(): void {
         this.map.destroy();
     }

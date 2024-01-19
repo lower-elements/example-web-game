@@ -14,7 +14,7 @@ export default class Player extends Entity {
     ) {
         super(game, x, y, z, map, false);
     }
-    private updateListenerPosition() {
+    updateListenerPosition() {
         this.game.setListenerPosition(this.x, this.y, this.z);
     }
     get facing(): number {
