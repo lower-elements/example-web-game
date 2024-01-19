@@ -1,3 +1,4 @@
+type Point = {x: number, y: number, z: number};
 export default class BoundedBox {
     minx: number;
     maxx: number;
@@ -5,6 +6,8 @@ export default class BoundedBox {
     maxy: number;
     minz: number;
     maxz: number;
+    center: Point;
+    size: Point;
 
     constructor(
         minx: number,
@@ -20,6 +23,8 @@ export default class BoundedBox {
         this.maxy = maxy;
         this.minz = minz;
         this.maxz = maxz;
+        this.center = this.calculateCenter();
+        this.size = this.calculateSize();
     }
 
     inBound(x: number, y: number, z: number): boolean {
@@ -40,8 +45,7 @@ export default class BoundedBox {
         const closestX = Math.max(this.minx, Math.min(point.x, this.maxx));
         const closestY = Math.max(this.miny, Math.min(point.y, this.maxy));
         const closestZ = Math.max(this.minz, Math.min(point.z, this.maxz));
-        const result = { x: closestX, y: closestY, z: closestZ };
-        return result;
+        return { x: closestX, y: closestY, z: closestZ };
     }
     intersects(otherBox: BoundedBox): boolean {
         return !(
@@ -53,11 +57,14 @@ export default class BoundedBox {
             this.minz > otherBox.maxz
         );
     }
-    get center(): { x: number; y: number; z: number } {
+    private calculateCenter(): Point {
         const centerX = (this.minx + this.maxx) / 2;
         const centerY = (this.miny + this.maxy) / 2;
         const centerZ = (this.minz + this.maxz) / 2;
         return { x: centerX, y: centerY, z: centerZ };
+    }
+    private calculateSize(): Point{
+        return {x: this.maxx-this.minx, y: this.maxy-this.miny, z: this.maxz-this.minz}
     }
     translate(offsetX: number, offsetY: number, offsetZ: number): void {
         this.minx += offsetX;

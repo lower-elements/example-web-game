@@ -13,8 +13,10 @@ export default class Entity extends EventEmitter<Entity> {
     protected movementTimer: Timer = new Timer();
     protected normalMovementTime: number = 277;
     protected soundEmitter: SoundEmitter;
+    id: string;
     constructor(
         game: Game,
+        id: string,
         x = 0,
         y = 0,
         z = 0,
@@ -23,6 +25,7 @@ export default class Entity extends EventEmitter<Entity> {
     ) {
         super();
         this.game = game;
+        this.id = id;
         this._x = x;
         this._y = y;
         this._z = z;
@@ -35,6 +38,7 @@ export default class Entity extends EventEmitter<Entity> {
             true,
             animatePanning
         );
+        this.map.addEntity(this);
     }
     rewireOutput(dist: AudioNode | null) {
         return this.soundEmitter.rewireOutput(dist);
@@ -66,13 +70,13 @@ export default class Entity extends EventEmitter<Entity> {
         this._z = value;
         this.soundEmitter.z = value;
     }
-    setPosition(
-        x: number,
-        y: number,
-        z: number,
-        playSound: boolean = true
-    ): void {
-        if (!this.map.inBound(x, y, z)) return;
+    move(x: number, y: number, z: number, playSound: boolean = true): void {
+        if (!this.map.inBound(x, y, z)) {
+            return;
+        }
+        if (!this.map.entities.move(this, this)) {
+            return;
+        }
         this.movementTimer.restart();
         this.x = x;
         this.y = y;
@@ -89,5 +93,8 @@ export default class Entity extends EventEmitter<Entity> {
     }
     protected fireEvent(event: string) {
         this.emit(event, this);
+    }
+    destroy() {
+        this.map.removeEntity(this);
     }
 }

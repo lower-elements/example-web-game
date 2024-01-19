@@ -12,7 +12,7 @@ export default class Player extends Entity {
         z: number = 0,
         map: Map
     ) {
-        super(game, x, y, z, map, false);
+        super(game, "player", x, y, z, map, false);
     }
     updateListenerPosition() {
         this.game.setListenerPosition(this.x, this.y, this.z);

@@ -7,11 +7,19 @@ export default class Game {
     gameContent: HTMLDivElement;
     private events: UIEvent[] = [];
     private stack: State[] = [];
+    private fpsElement: HTMLDivElement;
+    private lastFrameTime: number = 0;
+    private frameCount: number = 0;
     constructor(gameContent: HTMLDivElement) {
         this.gameContent = gameContent;
         this.audioContext = new AudioContext();
         this.subscribeToEvents();
         this.setListenerOrientation(0);
+        this.fpsElement = document.createElement("div");
+        this.fpsElement.style.position = "absolute";
+        this.fpsElement.style.top = "10px";
+        this.fpsElement.style.left = "10px";
+        this.gameContent.appendChild(this.fpsElement);
     }
     setListenerOrientation(degrees: number): void {
         const rad: number = (degrees / 180.0) * Math.PI;
@@ -60,6 +68,17 @@ export default class Game {
             currentState.update(16.6, this.events);
         }
         this.events.length = 0;
+        const currentTime = performance.now();
+        const deltaTime = currentTime - this.lastFrameTime;
+        this.frameCount++;
+
+        if (deltaTime >= 1000) {
+            // Update FPS every second
+            const fps = Math.round((this.frameCount * 1000) / deltaTime);
+            this.fpsElement.innerText = `${fps} fps`;
+            this.lastFrameTime = currentTime;
+            this.frameCount = 0;
+        }
         requestAnimationFrame(() => this.gameLoop());
     }
     private addEvent(event: UIEvent): void {

@@ -26,36 +26,40 @@ export default class Gameplay implements State {
     private onKeyRelease: KeyHandlers = {};
     private onKeyDown: KeyHandlers = {
         KeyW: (event) => {
-            if (this.player.canMove)
-                this.player.setPosition(
+            if (this.player.canMove) {
+                this.player.move(
                     this.player.x,
                     this.player.y + 1,
                     this.player.z
                 );
+            }
         },
         KeyD: (event) => {
-            if (this.player.canMove)
-                this.player.setPosition(
+            if (this.player.canMove) {
+                this.player.move(
                     this.player.x + 1,
                     this.player.y,
                     this.player.z
                 );
+            }
         },
         KeyS: (event) => {
-            if (this.player.canMove)
-                this.player.setPosition(
+            if (this.player.canMove) {
+                this.player.move(
                     this.player.x,
                     this.player.y - 1,
                     this.player.z
                 );
+            }
         },
         KeyA: (event) => {
-            if (this.player.canMove)
-                this.player.setPosition(
+            if (this.player.canMove) {
+                this.player.move(
                     this.player.x - 1,
                     this.player.y,
                     this.player.z
                 );
+            }
         },
     };
     constructor(game: Game) {
@@ -83,7 +87,7 @@ export default class Gameplay implements State {
     update(delta: number, events: UIEvent[]): void {
         for (let event of events) {
             if (event instanceof KeyboardEvent) {
-                let code = event.code;
+                let { code } = event;
                 switch (event.type) {
                     case "keydown":
                         this.heldKeys[code] = event;
