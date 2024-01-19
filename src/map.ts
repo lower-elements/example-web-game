@@ -34,6 +34,73 @@ export default class Map extends BoundedBox {
             }
         );
     }
+    private areAllSoundSourcesReady(): boolean {
+        for (let source of this.soundSources) {
+            if (!source.ready) {
+                return false;
+            }
+        }
+        return true;
+    }
+    async load(): Promise<void> {
+        await this.loadFootsteps();
+        await this.loadSoundSources();
+        this.soundSources.forEach((source) => source.play());
+    }
+    private loadSoundSources(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (!this.soundSources.length) {
+                return resolve();
+            }
+            for (let source of this.soundSources) {
+                source.events.once("ready", (_) => {
+                    if (this.areAllSoundSourcesReady()) {
+                        resolve();
+                    }
+                });
+            }
+            if (this.areAllSoundSourcesReady()) {
+                resolve();
+            }
+        });
+    }
+    private loadFootsteps(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (!this.platforms.length) {
+                return resolve();
+            }
+            const preloaders: HTMLAudioElement[] = [];
+            for (let platform of this.platforms) {
+                for (let index = 1; index <= 5; index++) {
+                    preloaders.push(
+                        new Audio(`sounds/steps/${platform.type}/${index}.ogg`)
+                    );
+                }
+            }
+            function areAllFootstepsReady(): boolean {
+                for (let preloader of preloaders) {
+                    if (preloader.readyState < 4) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            for (let preloader of preloaders) {
+                preloader.addEventListener(
+                    "canplaythrough",
+                    (_) => {
+                        if (areAllFootstepsReady()) {
+                            resolve();
+                        }
+                    },
+                    { once: true }
+                );
+            }
+            if (areAllFootstepsReady()) {
+                resolve();
+            }
+        });
+    }
     *getEntitiesIn(between: BoundedBox): Generator<Entity> {
         for (let { vec, unit } of this.entities.queryIteratable({
             center: between.center,

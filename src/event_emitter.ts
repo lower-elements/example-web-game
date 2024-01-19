@@ -14,7 +14,7 @@ export default class EventEmitter<T> {
         this.events[eventName].push(callback);
     }
 
-    protected emit(eventName: string, data?: T): void {
+    emit(eventName: string, data?: T): void {
         if (this.events[eventName]) {
             this.events[eventName].forEach((callback) => {
                 callback(data!);
@@ -38,5 +38,11 @@ export default class EventEmitter<T> {
 
     removeAllListeners(eventName: string): void {
         delete this.events[eventName];
+    }
+    once(eventName: string, callback: EventCallback<T>): void {
+        this.on(eventName, (data) => {
+            callback(data);
+            this.cancel(eventName, callback);
+        });
     }
 }

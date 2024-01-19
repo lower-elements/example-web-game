@@ -14,6 +14,7 @@ export default class Gameplay implements State {
     game: Game;
     private map: Map;
     player: Player;
+    private blocked: boolean = false;
     private heldKeys: HeldKeys = {};
     private onKeyPress: KeyHandlers = {
         Escape: (event) => {
@@ -73,9 +74,12 @@ export default class Gameplay implements State {
         this.map.spawnSoundSource(36, 55, 36, 55, 0, 70, "ambience/pond.ogg");
     }
     initialize(): void {}
-    onPush(): void {
+    async onPush(): Promise<void> {
         speak("Welcome!");
         this.player.updateListenerPosition();
+        this.blocked = true;
+        await this.map.load();
+        this.blocked = false;
     }
     onCover(): void {}
     onUncover(): void {
@@ -85,6 +89,9 @@ export default class Gameplay implements State {
         this.map.destroy();
     }
     update(delta: number, events: UIEvent[]): void {
+        if (this.blocked) {
+            return;
+        }
         for (let event of events) {
             if (event instanceof KeyboardEvent) {
                 let { code } = event;
