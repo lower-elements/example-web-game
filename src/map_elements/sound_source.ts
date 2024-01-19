@@ -39,7 +39,7 @@ export default class SoundSource extends BoundedBox {
         this.updateEventCallback = (entity) =>
             this.updateRef(entity.x, entity.y, entity.z);
         ref.on("move", this.updateEventCallback);
-        this.play();
+        this.sound.mediaElement.autoplay = true;
     }
     updateRef(x: number, y: number, z: number): void {
         const position = this.closestPointTo({ x: x, y: y, z: z });
