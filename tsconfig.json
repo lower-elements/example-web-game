@@ -3,6 +3,8 @@
         "target": "ES2022",
         "module": "ES6",
         "moduleResolution": "node",
-        "strict": true
-    }
+        "strict": true,
+        "rootDir": "./src"
+    },
+    "exclude": ["server"]
 }

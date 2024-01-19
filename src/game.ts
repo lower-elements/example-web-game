@@ -71,7 +71,6 @@ export default class Game {
         const currentTime = performance.now();
         const deltaTime = currentTime - this.lastFrameTime;
         this.frameCount++;
-
         if (deltaTime >= 1000) {
             // Update FPS every second
             const fps = Math.round((this.frameCount * 1000) / deltaTime);
