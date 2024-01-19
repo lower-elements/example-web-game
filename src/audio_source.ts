@@ -35,8 +35,8 @@ export default class AudioSource {
     }
     connect(
         dist: AudioNode,
-        output: number | undefined,
-        input: number | undefined
+        output: number | undefined = undefined,
+        input: number | undefined = undefined
     ): void {
         if (this.isConnectedToSomething) {
             this.disconnect(this.source.context.destination);

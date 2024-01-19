@@ -12,7 +12,7 @@ export default class Player extends Entity {
         z: number = 0,
         map: Map
     ) {
-        super(game, x, y, z, map);
+        super(game, x, y, z, map, false);
     }
     private updateListenerPosition() {
         this.game.setListenerPosition(this.x, this.y, this.z);
@@ -34,18 +34,15 @@ export default class Player extends Entity {
         return this._z;
     }
     set x(value: number) {
-        this._x = value;
-        this.pannerNode.positionX.value = value;
+        super.x = value;
         this.updateListenerPosition();
     }
     set y(value: number) {
-        this._y = value;
-        this.pannerNode.positionY.value = value;
+        super.y = value;
         this.updateListenerPosition();
     }
     set z(value: number) {
-        this._z = value;
-        this.pannerNode.positionZ.value = value;
+        super.z = value;
         this.updateListenerPosition();
     }
 }
