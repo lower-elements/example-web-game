@@ -6,13 +6,14 @@ export default class SoundEmitter {
     private pannerNode: PannerNode;
     private isRewired: boolean = false;
     private animatePanning: boolean;
+    private panningAnimationDuration = 0.02;
 
     constructor(
         audioContext: AudioContext,
         x: number = 0,
         y: number = 0,
         z: number = 0,
-        hrtf: boolean = true, 
+        hrtf: boolean = true,
         animatePanning: boolean = true
     ) {
         this.audioContext = audioContext;
@@ -25,9 +26,6 @@ export default class SoundEmitter {
         this.pannerNode.positionY.value = y;
         this.pannerNode.positionZ.value = z;
         this.animatePanning = animatePanning;
-    }
-    private get panningAnimationDuration(): number{
-        return (this.animatePanning? 0.02:-1);
     }
     rewireOutput(dist: AudioNode | null) {
         this.gainNode.disconnect();
@@ -49,22 +47,28 @@ export default class SoundEmitter {
         return this.pannerNode.positionZ.value;
     }
     set x(value: number) {
-        this.pannerNode.positionX.linearRampToValueAtTime(
-            value,
-            this.audioContext.currentTime + this.panningAnimationDuration
-        );
+        if (this.animatePanning) {
+            this.pannerNode.positionX.linearRampToValueAtTime(
+                value,
+                this.audioContext.currentTime + this.panningAnimationDuration
+            );
+        } else this.pannerNode.positionX.value = value;
     }
     set y(value: number) {
-        this.pannerNode.positionY.linearRampToValueAtTime(
-            value,
-            this.audioContext.currentTime + this.panningAnimationDuration
-        );
+        if (this.animatePanning) {
+            this.pannerNode.positionY.linearRampToValueAtTime(
+                value,
+                this.audioContext.currentTime + this.panningAnimationDuration
+            );
+        } else this.pannerNode.positionY.value = value;
     }
     set z(value: number) {
-        this.pannerNode.positionZ.linearRampToValueAtTime(
-            value,
-            this.audioContext.currentTime + this.panningAnimationDuration
-        );
+        if (this.animatePanning) {
+            this.pannerNode.positionZ.linearRampToValueAtTime(
+                value,
+                this.audioContext.currentTime + this.panningAnimationDuration
+            );
+        } else this.pannerNode.positionZ.value = value;
     }
     attachSound(sound: AudioSource): void {
         sound.connect(this.pannerNode);
