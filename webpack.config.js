@@ -26,6 +26,5 @@ module.exports = {
       minify: true, // You can customize minification options here
     }),
     new WebpackManifestPlugin(),
-    new CleanWebpackPlugin(),
   ]
 };

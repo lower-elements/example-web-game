@@ -1,0 +1,6 @@
+/**
+   * @license
+   * author: https://github.com/huxia
+   * fast_quadtree_ts.js v0.0.13
+   * Released under the MIT license.
+   */
