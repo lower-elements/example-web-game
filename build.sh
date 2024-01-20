@@ -31,7 +31,7 @@ if npm run build; then
   # Run server if specified
   if [ "$RUN_SERVER" = true ]; then
     echo "Running the server..."
-    (cd server && node dist/index.js)
+    (cd server && docker-compose up --build)
   fi
 else
   echo "Client build failed. Aborting server build. 😟"
