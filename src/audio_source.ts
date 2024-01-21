@@ -1,4 +1,10 @@
+/**
+ * Represents an audio source for playing a sound.
+ */
 export default class AudioSource {
+    /**
+     * The {mediaElement} used for playback. Useful for controling playback.
+     */
     public mediaElement: HTMLAudioElement;
     private source: MediaElementAudioSourceNode;
     private isConnectedToSomething: boolean = false;
@@ -19,6 +25,9 @@ export default class AudioSource {
             this.isConnectedToSomething = false;
         }
     }
+    /**
+     * Plays the audio, or if its playing, restart from the start.
+     */
     play(): void {
         this.mediaElement.currentTime = 0;
         this.mediaElement.play();

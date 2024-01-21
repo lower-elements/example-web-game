@@ -4,6 +4,7 @@ import Gameplay from "./states/gameplay";
 import Menu from "./states/menu";
 import State from "./states/state";
 import React from "react";
+import LoginState from "./states/login";
 interface GameProps {
     gameContainer: HTMLDivElement;
 }
@@ -42,6 +43,9 @@ export default class Game extends Component<GameProps, GameState> {
             let currentState = this.stack[this.stack.length - 1];
             const { gui } = currentState;
             this.setState({ currentGui: gui });
+            if (!gui) {
+                this.props.gameContainer.focus();
+            }
         }
     }
     setListenerOrientation(degrees: number): void {

@@ -5,7 +5,9 @@ import SoundSource from "./map_elements/sound_source";
 import Zone from "./map_elements/zone";
 import Gameplay from "./states/gameplay";
 import Entity from "./entities/entity";
-
+/**
+ * Represents the game's world map, with functions to spawning and querying map elements such as platforms, sound sources, zones, and entities.
+ */
 export default class Map extends BoundedBox {
     private platforms: Platform[] = [];
     private zones: Zone[] = [];
@@ -42,6 +44,11 @@ export default class Map extends BoundedBox {
         }
         return true;
     }
+    /**
+     * Resolves once all audio assets this map needs have been preloaded, or preloaded enough of them for smooth gameplay, and also initializes playback of the sound sources.
+     *
+     * Rejects if this operation fails.
+     */
     async load(): Promise<void> {
         await this.loadFootsteps();
         await this.loadSoundSources();
@@ -101,6 +108,9 @@ export default class Map extends BoundedBox {
             }
         });
     }
+    /**
+     * Returns a generator iterating over all the entities inside a specific range.
+     */
     *getEntitiesIn(between: BoundedBox): Generator<Entity> {
         for (let { vec, unit } of this.entities.queryIteratable({
             center: between.center,
