@@ -5,6 +5,10 @@ services:
         restart: unless-stopped
         ports:
             - "3000:3000"
+        environment:
+            MONGO_USER: ${DB_USERNAME}
+            MONGO_PASSWORD: ${DB_PASSWORD}
+
     mongo:
         image: mongo:latest
         environment:

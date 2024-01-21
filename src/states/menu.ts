@@ -2,15 +2,14 @@ import State from "./state";
 import AudioSource from "../audio_source";
 import speak from "../speech";
 import Game from "../game";
-export default class Menu implements State {
+export default class Menu extends State {
     private title: string;
     private items: MenuItem[] = [];
     private index: number = -1;
-    private game: Game;
     private moveSound: AudioSource;
     private openSound: AudioSource;
     constructor(game: Game, title: string) {
-        this.game = game;
+        super(game);
         this.title = title;
         this.moveSound = new AudioSource(
             this.game.audioContext,

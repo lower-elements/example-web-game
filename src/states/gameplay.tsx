@@ -3,6 +3,8 @@ import Player from "../entities/player";
 import Game from "../game";
 import Map from "../map";
 import speak from "../speech";
+import InputBox from "../gui/input_box";
+import React from "react";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
 };
@@ -10,8 +12,7 @@ type HeldKeys = {
     [key: string]: KeyboardEvent;
 };
 
-export default class Gameplay implements State {
-    game: Game;
+export default class Gameplay extends State {
     private map: Map;
     player: Player;
     private blocked: boolean = false;
@@ -64,7 +65,7 @@ export default class Gameplay implements State {
         },
     };
     constructor(game: Game) {
-        this.game = game;
+        super(game);
         this.map = new Map(this, 0, 70, 0, 70, 0, 10);
         this.player = new Player(this.game, 0, 0, 0, this.map);
         this.map.spawnPlatform(0, 70, 0, 70, 0, 0, "grass");

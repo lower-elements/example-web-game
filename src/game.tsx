@@ -1,25 +1,48 @@
+import { Component, ReactElement, ReactNode } from "react";
 import speak from "./speech";
 import Gameplay from "./states/gameplay";
 import Menu from "./states/menu";
 import State from "./states/state";
-export default class Game {
+import React from "react";
+interface GameProps {
+    gameContainer: HTMLDivElement;
+}
+interface GameState {
+    fps: number;
+    currentGui: ReactNode | null;
+}
+export default class Game extends Component<GameProps, GameState> {
+    static noState = null;
     audioContext: AudioContext;
-    gameContent: HTMLDivElement;
     private events: UIEvent[] = [];
     private stack: State[] = [];
-    private fpsElement: HTMLDivElement;
     private lastFrameTime: number = 0;
     private frameCount: number = 0;
-    constructor(gameContent: HTMLDivElement) {
-        this.gameContent = gameContent;
+    state: GameState = { currentGui: Game.noState, fps: 0 };
+    gameContainer: HTMLDivElement;
+    constructor(props: GameProps) {
+        super(props);
+        this.gameContainer = props.gameContainer;
         this.audioContext = new AudioContext();
         this.subscribeToEvents();
         this.setListenerOrientation(0);
-        this.fpsElement = document.createElement("div");
-        this.fpsElement.style.position = "absolute";
-        this.fpsElement.style.top = "10px";
-        this.fpsElement.style.left = "10px";
-        this.gameContent.appendChild(this.fpsElement);
+        this.replaceWithMainMenu();
+        this.gameLoop();
+    }
+    render(): React.ReactNode {
+        return (
+            <div>
+                <p>{this.state.fps} FPS</p>
+                {this.state.currentGui}
+            </div>
+        );
+    }
+    private update(): void {
+        if (this.stack.length > 0) {
+            let currentState = this.stack[this.stack.length - 1];
+            const { gui } = currentState;
+            this.setState({ currentGui: gui });
+        }
     }
     setListenerOrientation(degrees: number): void {
         const rad: number = (degrees / 180.0) * Math.PI;
@@ -44,6 +67,7 @@ export default class Game {
         }
         st.onPush();
         this.stack.push(st);
+        this.update();
         return st;
     }
     popState(): State {
@@ -54,6 +78,7 @@ export default class Game {
         if (this.stack.length > 0) {
             this.stack[this.stack.length - 1].onUncover();
         }
+        this.update();
         return result;
     }
     replaceState(state: State): void {
@@ -74,9 +99,9 @@ export default class Game {
         if (deltaTime >= 1000) {
             // Update FPS every second
             const fps = Math.round((this.frameCount * 1000) / deltaTime);
-            this.fpsElement.innerText = `${fps} fps`;
             this.lastFrameTime = currentTime;
             this.frameCount = 0;
+            this.setState({ fps: fps });
         }
         requestAnimationFrame(() => this.gameLoop());
     }
@@ -86,8 +111,12 @@ export default class Game {
     }
     private subscribeToEvents() {
         const eventHandler = this.addEvent.bind(this);
-        this.gameContent.addEventListener("keydown", eventHandler);
-        this.gameContent.addEventListener("keyup", eventHandler);
+        this.gameContainer.onkeydown = eventHandler;
+        this.gameContainer.onkeyup = eventHandler;
+    }
+    private unsubscribeFromEvents() {
+        this.gameContainer.onkeydown = null;
+        this.gameContainer.onkeyup = null;
     }
     replaceWithMainMenu() {
         const menu = new Menu(this, "main menu");
