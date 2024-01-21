@@ -10,13 +10,42 @@ interface User {
 }
 export default class Database {
     static readonly mongoUrl = `mongodb://${process.env["MONGO_USER"]}:${process.env["MONGO_PASSWORD"]}@mongo:27017`;
-    private mongoClient: MongoClient;
-    private database: Db;
-    private users: Collection<User>;
+    private readonly client: MongoClient;
+    private readonly database: Db;
+    private readonly users: Collection<User>;
     constructor(mongoClient: MongoClient) {
-        this.mongoClient = mongoClient;
+        this.client = mongoClient;
         this.database = mongoClient.db("example");
         this.users = this.database.collection<User>("users");
-        
     }
+    async close(): Promise<void> {
+        return await this.client.close();
+    }
+    async getUserByEmail(email: string): Promise<User | null> {
+        return await this.users.findOne({ email: normaliseEmail(email) });
+    }
+    async deleteUserByEmail(email: string): Promise<boolean> {
+        return (
+            (await this.users.deleteOne({ email: normaliseEmail(email) }))
+                .deletedCount > 0
+        );
+    }
+    async insertUser(user: User): Promise<boolean> {
+        if (await this.getUserByEmail(user.email)) {
+            return false;
+        }
+        await this.users.insertOne(user);
+        return true;
+    }
+    async replaceUserByEmail(email: string, user: User): Promise<boolean> {
+        const result = await this.users.replaceOne(
+            { email: normaliseEmail(email) },
+            user,
+            { upsert: false }
+        );
+        return result.modifiedCount > 0;
+    }
+}
+function normaliseEmail(email: string): string {
+    return email.toLowerCase();
 }
