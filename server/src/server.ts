@@ -1,8 +1,9 @@
 import express, { Request, Response } from "express";
-import http from "http";
+import http, { IncomingMessage } from "http";
 import WebSocket from "ws";
 import { MongoClient } from "mongodb";
-import Database from "./database";
+import Database, { User } from "./database";
+import Cookie from "cookie";
 /**
  * Represents the json events the client and server exchange.
  */
@@ -20,11 +21,37 @@ export default class Server {
     constructor(port: number = 3000, mongoClient: MongoClient) {
         this.port = port;
         this.server = http.createServer(this.app);
-        this.wss = new WebSocket.Server({ server: this.server });
+        this.wss = new WebSocket.Server({
+            server: this.server,
+            clientTracking: true,
+            maxPayload: 1024 * 1024, //1 megabytes
+        });
         this.database = new Database(mongoClient);
     }
-    private handleNewConnection(ws: WebSocket): void {
-        console.log("WebSocket connected");
+    private async handleNewConnection(
+        ws: WebSocket,
+        req: IncomingMessage
+    ): Promise<void> {
+        const cookies = req.headers.cookie;
+        try {
+            if (cookies) {
+                const userInfo = Cookie.parse(cookies);
+                const user = await this.database.getUserByEmailAndPassword(
+                    userInfo.email,
+                    userInfo.password
+                );
+                if (user) {
+                    return this.acceptConnection(ws, user);
+                }
+            }
+            ws.close();
+        } catch (err) {
+            ws.close();
+            throw(err);
+        }
+    }
+    private acceptConnection(ws: WebSocket, user: User) {
+        console.log(`WebSocket connected, welcome ${user.username}, ${user.email}. Password hash: ${user.password}`);
         ws.on("message", (message, isBinary) => {
             this.handleMessage(ws, message as Buffer, isBinary);
         });
@@ -32,6 +59,7 @@ export default class Server {
             console.log("WebSocket disconnected");
         });
     }
+
     private handleMessage(
         ws: WebSocket,
         message: Buffer,

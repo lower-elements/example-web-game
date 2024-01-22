@@ -4,7 +4,7 @@ import { Collection, Db, MongoClient } from "mongodb";
 /**
  * Represents a user in the database.
  */
-interface User {
+export interface User {
     email: string;
     username: string;
     password: string;
@@ -34,12 +34,13 @@ export default class Database {
         email: string,
         password: string
     ): Promise<User | null> {
-        const hashedPassword: string = await this.hashPassword(password);
         const result: User | null = await this.users.findOne({
-            email: email,
-            password: hashedPassword,
+            email: normaliseEmail(email),
         });
-        return result;
+        if (result && await Bcrypt.compare(password, result.password)) {
+            return result;
+        }
+        return null;
     }
     private hashPassword(password: string): Promise<string> {
         return Bcrypt.hash(password, this.hashRounds);
