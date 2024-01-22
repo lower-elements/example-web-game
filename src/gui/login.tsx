@@ -10,6 +10,7 @@ type onLoginSubmitCallback = (info: LoginInfo) => void;
 
 interface LoginFormProps {
     onSubmit: onLoginSubmitCallback;
+    askForUsername?: boolean;
 }
 
 interface LoginFormState {
@@ -80,16 +81,18 @@ export default class LoginForm extends Component<
                         <p>Please enter a valid email address.</p>
                     )}
                 </div>
-                <div>
-                    <label htmlFor="username">Username:</label>
-                    <input
-                        id="username"
-                        type="text"
-                        value={username}
-                        maxLength={24}
-                        onChange={this.handleUsernameChange}
-                    />
-                </div>
+                {(this.props.askForUsername ?? true) && (
+                    <div>
+                        <label htmlFor="username">Username:</label>
+                        <input
+                            id="username"
+                            type="text"
+                            value={username}
+                            maxLength={24}
+                            onChange={this.handleUsernameChange}
+                        />
+                    </div>
+                )}
                 <div>
                     <label htmlFor="password">Password:</label>
                     <input

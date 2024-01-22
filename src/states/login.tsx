@@ -8,9 +8,15 @@ type onSubmitCallback = (game: Game, info: LoginInfo) => void;
  */
 export default class LoginState extends State {
     private onSubmit: onSubmitCallback;
-    constructor(game: Game, onSubmit: onSubmitCallback) {
+    private askForUsername: boolean = true;
+    constructor(
+        game: Game,
+        onSubmit: onSubmitCallback,
+        askForUsername: boolean = true
+    ) {
         super(game);
         this.onSubmit = onSubmit;
+        this.askForUsername = askForUsername;
         this.setupGui();
     }
     update(delta: number, events: UIEvent[]): void {
@@ -27,6 +33,7 @@ export default class LoginState extends State {
     private setupGui(): void {
         this.gui = (
             <LoginForm
+                askForUsername={this.askForUsername}
                 onSubmit={(info) => {
                     this.onSubmit(this.game, info);
                 }}

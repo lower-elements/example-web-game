@@ -5,6 +5,7 @@ import Menu from "./states/menu";
 import State from "./states/state";
 import React from "react";
 import LoginState from "./states/login";
+import { replaceWithMainMenu } from "./menus";
 interface GameProps {
     gameContainer: HTMLDivElement;
 }
@@ -27,7 +28,7 @@ export default class Game extends Component<GameProps, GameState> {
         this.audioContext = new AudioContext();
         this.subscribeToEvents();
         this.setListenerOrientation(0);
-        this.replaceWithMainMenu();
+        replaceWithMainMenu(this);
         this.gameLoop();
     }
     render(): React.ReactNode {
@@ -121,17 +122,5 @@ export default class Game extends Component<GameProps, GameState> {
     private unsubscribeFromEvents() {
         this.gameContainer.onkeydown = null;
         this.gameContainer.onkeyup = null;
-    }
-    replaceWithMainMenu() {
-        const menu = new Menu(this, "main menu");
-        menu.setItems([
-            {
-                label: "play",
-                callback(game, menu) {
-                    game.replaceState(new Gameplay(game));
-                },
-            },
-        ]);
-        this.replaceState(menu);
     }
 }

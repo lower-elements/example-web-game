@@ -5,6 +5,7 @@ import Map from "../map";
 import speak from "../speech";
 import InputBox from "../gui/input_box";
 import React from "react";
+import { replaceWithMainMenu } from "../menus";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
 };
@@ -19,7 +20,7 @@ export default class Gameplay extends State {
     private heldKeys: HeldKeys = {};
     private onKeyPress: KeyHandlers = {
         Escape: (event) => {
-            this.game.replaceWithMainMenu();
+            replaceWithMainMenu(this.game);
         },
         KeyC: (event) => {
             speak(`${this.player.x}, ${this.player.y}, ${this.player.z}`);
