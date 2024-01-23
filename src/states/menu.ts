@@ -38,7 +38,9 @@ export default class Menu extends State {
     }
     onPop(): void {}
     onCover(): void {}
-    onUncover(): void {}
+    onUncover(): void {
+        this.setIndex(this.index);
+    }
     update(delta: number, events: UIEvent[]): void {
         for (const event of events) {
             if (this.items.length > 0) {
