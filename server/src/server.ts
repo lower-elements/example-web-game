@@ -2,8 +2,10 @@ import express, { Request, Response } from "express";
 import http, { IncomingMessage } from "http";
 import WebSocket from "ws";
 import { MongoClient } from "mongodb";
-import Database, { User } from "./database";
+import Database, { UserInfo } from "./database";
 import Cookie from "cookie";
+import User from "./user";
+import EventHandler, { eventHandlerCallback } from "./event_handler";
 /**
  * Represents the json events the client and server exchange.
  */
@@ -13,20 +15,34 @@ interface Event {
 }
 
 export default class Server {
-    private app = express();
-    private server: http.Server;
-    private wss: WebSocket.Server;
-    private port: number;
-    private database: Database;
+    private readonly app = express();
+    private readonly server: http.Server;
+    private readonly wss: WebSocket.Server;
+    private readonly port: number;
+    private readonly eventHandler: EventHandler;
+    readonly database: Database;
+    users: Set<User> = new Set<User>();
     constructor(port: number = 3000, mongoClient: MongoClient) {
         this.port = port;
         this.server = http.createServer(this.app);
         this.wss = new WebSocket.Server({
             server: this.server,
-            clientTracking: true,
             maxPayload: 1024 * 1024, //1 megabytes
         });
         this.database = new Database(mongoClient);
+        this.eventHandler = new EventHandler(this);
+    }
+    addUser(user: User): void {
+        this.users.add(user);
+    }
+    removeUser(user: User): void {
+        this.users.delete(user);
+    }
+    sendEventToAll(event: string, data: Object) {
+        this.users.forEach((user) => user.sendEvent(event, data));
+    }
+    sendBinaryToAll(data: Buffer) {
+        this.users.forEach((user) => user.sendBinary(data));
     }
     private async handleNewConnection(
         ws: WebSocket,
@@ -41,35 +57,41 @@ export default class Server {
                     userInfo.password
                 );
                 if (user) {
-                    return this.acceptConnection(ws, user);
+                    return this.acceptConnection(ws, new User(this, user));
                 }
             }
             ws.close();
         } catch (err) {
             ws.close();
-            throw(err);
+            throw err;
         }
     }
     private acceptConnection(ws: WebSocket, user: User) {
-        console.log(`WebSocket connected, welcome ${user.username}, ${user.email}. Password hash: ${user.password}`);
+        user.setSocket(ws);
+        this.addUser(user);
+        console.log(
+            `WebSocket connected, welcome ${user.username}, ${user.email}. Password hash: ${user.password}`
+        );
         ws.on("message", (message, isBinary) => {
-            this.handleMessage(ws, message as Buffer, isBinary);
+            this.handleMessage(user, ws, message as Buffer, isBinary);
         });
-        ws.on("close", () => {
+        ws.on("close", async () => {
+            this.removeUser(user);
+            await user.save();
             console.log("WebSocket disconnected");
         });
     }
 
     private handleMessage(
+        user: User,
         ws: WebSocket,
         message: Buffer,
         isBinary: boolean = true
     ): void {
         if (!isBinary) {
-            try {
-                let data: Event = JSON.parse(message.toString());
-                console.log(data);
-            } catch {}
+            let data: Event = JSON.parse(message.toString());
+            this.eventHandler.triggerEvent(data.event, user, data.data);
+            console.log(data);
         } else {
             console.log(`binary message! ${message.readUint8(0)}`);
         }

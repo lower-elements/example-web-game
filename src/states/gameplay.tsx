@@ -6,6 +6,8 @@ import speak from "../speech";
 import InputBox from "../gui/input_box";
 import React from "react";
 import { replaceWithMainMenu } from "../menus";
+import Client from "../network";
+import ChatState from "./chat";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
 };
@@ -14,81 +16,44 @@ type HeldKeys = {
 };
 
 export default class Gameplay extends State {
-    private map: Map;
     player: Player;
+    map: Map;
     private blocked: boolean = false;
     private heldKeys: HeldKeys = {};
     private onKeyPress: KeyHandlers = {
         Escape: (event) => {
             replaceWithMainMenu(this.game);
         },
-        KeyC: (event) => {
-            speak(`${this.player.x}, ${this.player.y}, ${this.player.z}`);
-        },
+        Slash: (event) =>
+            this.game.pushState(new ChatState(this.game, this.networkClient)),
     };
     private onKeyRelease: KeyHandlers = {};
-    private onKeyDown: KeyHandlers = {
-        KeyW: (event) => {
-            if (this.player.canMove) {
-                this.player.move(
-                    this.player.x,
-                    this.player.y + 1,
-                    this.player.z
-                );
-            }
-        },
-        KeyD: (event) => {
-            if (this.player.canMove) {
-                this.player.move(
-                    this.player.x + 1,
-                    this.player.y,
-                    this.player.z
-                );
-            }
-        },
-        KeyS: (event) => {
-            if (this.player.canMove) {
-                this.player.move(
-                    this.player.x,
-                    this.player.y - 1,
-                    this.player.z
-                );
-            }
-        },
-        KeyA: (event) => {
-            if (this.player.canMove) {
-                this.player.move(
-                    this.player.x - 1,
-                    this.player.y,
-                    this.player.z
-                );
-            }
-        },
-    };
+    private onKeyDown: KeyHandlers = {};
+    private networkClient: Client;
     constructor(game: Game) {
         super(game);
-        this.map = new Map(this, 0, 70, 0, 70, 0, 10);
+        this.map = new Map(this, 0, 10, 0, 10, 0, 10);
         this.player = new Player(this.game, 0, 0, 0, this.map);
-        this.map.spawnPlatform(0, 70, 0, 70, 0, 0, "grass");
-        this.map.spawnPlatform(30, 60, 30, 60, 0, 0, "mud");
-        this.map.spawnPlatform(36, 55, 36, 55, 0, 0, "water");
-        this.map.spawnSoundSource(0, 70, 0, 70, 0, 70, "ambience/birds.ogg");
-        this.map.spawnSoundSource(36, 55, 36, 55, 0, 70, "ambience/pond.ogg");
+        this.networkClient = new Client(this, {
+            url: "ws://localhost:3000",
+            onClose(client) {
+                speak("Connection closed");
+            },
+            onError(client) {
+                speak("error");
+            },
+        });
     }
     initialize(): void {}
     async onPush(): Promise<void> {
         speak("Welcome!");
-        this.player.updateListenerPosition();
-        this.blocked = true;
-        await this.map.load();
-        this.blocked = false;
     }
     onCover(): void {}
     onUncover(): void {
-        this.player.updateListenerPosition();
+        // this.player.updateListenerPosition();
     }
     onPop(): void {
-        this.map.destroy();
+        this.networkClient.close();
     }
     update(delta: number, events: UIEvent[]): void {
         if (this.blocked) {
