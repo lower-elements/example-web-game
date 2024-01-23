@@ -34,8 +34,11 @@ export default class Gameplay extends State {
         super(game);
         this.map = new Map(this, 0, 10, 0, 10, 0, 10);
         this.player = new Player(this.game, 0, 0, 0, this.map);
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const host = window.location.hostname;
+        const port = window.location.port ? `:${window.location.port}` : "";
         this.networkClient = new Client(this, {
-            url: "ws://localhost:3000",
+            url: `${protocol}//${host}${port}`,
             onClose(client) {
                 replaceWithMainMenu(game);
                 speak("Connection closed");
