@@ -100,7 +100,7 @@ export default class Server {
         this.app.use(express.json());
         this.app.post("/signin", this.onsignin.bind(this));
         this.app.post("/signup", this.onsignup.bind(this));
-        this.app.use(express.static("public"));
+        this.app.use(express.static("public", { maxAge: 2000000000 }));
         // WebSocket setup
         this.wss.on("connection", this.handleNewConnection.bind(this));
         this.server.listen(this.port, () =>
