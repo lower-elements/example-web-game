@@ -7,7 +7,9 @@ import { Collection, Db, MongoClient } from "mongodb";
 export interface UserInfo {
     email: string;
     username: string;
+    normalizedUsername?: string;
     password: string;
+    [key: string]: string|undefined;
 }
 export default class Database {
     static readonly mongoUrl = `mongodb://${process.env["MONGO_USER"]}:${process.env["MONGO_PASSWORD"]}@mongo:27017`;
@@ -25,7 +27,18 @@ export default class Database {
         return await this.client.close();
     }
     async getUserByEmail(email: string): Promise<UserInfo | null> {
-        return await this.users.findOne({ email: normaliseEmail(email) });
+        return await this.users.findOne({ email: normalize(email) });
+    }
+    async getUserByEmailOrUsername(
+        email: string,
+        username: string
+    ): Promise<UserInfo | null> {
+        return await this.users.findOne({
+            $or: [
+                { email: normalize(email) },
+                { normalizedUsername: normalize(username) },
+            ],
+        });
     }
     /**
      * This function will handle hashing the password. Please do not pass a hashed password.
@@ -35,9 +48,9 @@ export default class Database {
         password: string
     ): Promise<UserInfo | null> {
         const result: UserInfo | null = await this.users.findOne({
-            email: normaliseEmail(email),
+            email: normalize(email),
         });
-        if (result && await Bcrypt.compare(password, result.password)) {
+        if (result && (await Bcrypt.compare(password, result.password))) {
             return result;
         }
         return null;
@@ -47,7 +60,7 @@ export default class Database {
     }
     async deleteUserByEmail(email: string): Promise<boolean> {
         return (
-            (await this.users.deleteOne({ email: normaliseEmail(email) }))
+            (await this.users.deleteOne({ email: normalize(email) }))
                 .deletedCount > 0
         );
     }
@@ -55,22 +68,23 @@ export default class Database {
      * This function will handle hashing the password. Please do not pass a hashed password.
      */
     async insertUser(user: UserInfo): Promise<boolean> {
-        if (await this.getUserByEmail(user.email)) {
+        if (await this.getUserByEmailOrUsername(user.email, user.username)) {
             return false;
         }
         user.password = await this.hashPassword(user.password);
+        user.normalizedUsername = normalize(user.username);
         await this.users.insertOne(user);
         return true;
     }
     async replaceUserByEmail(email: string, user: UserInfo): Promise<boolean> {
         const result = await this.users.replaceOne(
-            { email: normaliseEmail(email) },
+            { email: normalize(email) },
             user,
             { upsert: false }
         );
         return result.modifiedCount > 0;
     }
 }
-function normaliseEmail(email: string): string {
-    return email.toLowerCase();
+function normalize(what: string): string {
+    return what.toLowerCase();
 }

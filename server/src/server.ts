@@ -70,7 +70,7 @@ export default class Server {
         user.setSocket(ws);
         this.addUser(user);
         console.log(
-            `WebSocket connected, welcome ${user.username}, ${user.email}. Password hash: ${user.password}`
+            `WebSocket connected, welcome ${user.info.username}, ${user.info.email}. Password hash: ${user.info.password}`
         );
         ws.on("message", (message, isBinary) => {
             this.handleMessage(user, ws, message as Buffer, isBinary);
@@ -98,6 +98,7 @@ export default class Server {
     }
     async start(): Promise<void> {
         this.app.use(express.json());
+        this.app.post("/signin", this.onsignin.bind(this));
         this.app.post("/signup", this.onsignup.bind(this));
         this.app.use(express.static("public"));
         // WebSocket setup
@@ -121,18 +122,15 @@ export default class Server {
                 password,
             });
             if (userCreated) {
-                ["email", "password"].forEach((cookieName) => {
-                    res.cookie(cookieName, req.body[cookieName], {
-                        expires: new Date(Date.UTC(2025, 0, 1)),
-                        httpOnly: true,
-                        secure: true,
-                    });
+                ["username", "email", "password"].forEach((cookieName) => {
+                    this.setCookie(res, cookieName, req.body[cookieName]);
                 });
                 return res.status(201).json({ status: "success" });
             }
             return res.status(409).json({
                 status: "error",
-                message: "An account with this email already exists!",
+                message:
+                    "An account with this email or username already exists!",
             });
         } catch (error) {
             console.error("Error creating user:", error);
@@ -141,5 +139,48 @@ export default class Server {
                 message: "Internal Server Error",
             });
         }
+    }
+    private async onsignin(
+        req: Request,
+        res: Response
+    ): Promise<Response | null> {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return null;
+        }
+        try {
+            const user = await this.database.getUserByEmailAndPassword(
+                email,
+                password
+            );
+            if (user) {
+                ["username", "email"].forEach((cookieName) => {
+                    this.setCookie(res, cookieName, user[cookieName] ?? "");
+                });
+                this.setCookie(res, "password", password ?? "");
+                return res.status(201).json({ status: "success" });
+            }
+            return res.status(404).json({
+                status: "error",
+                message: "This account does not exist!",
+            });
+        } catch (error) {
+            console.error("Error creating user:", error);
+            return res.status(500).json({
+                status: "error",
+                message: "Internal Server Error",
+            });
+        }
+    }
+    private setCookie(
+        res: express.Response<any, Record<string, any>>,
+        cookieName: string,
+        cookieContent: string
+    ) {
+        res.cookie(cookieName, cookieContent, {
+            expires: new Date(Date.UTC(2025, 0, 1)),
+            httpOnly: true,
+            secure: true,
+        });
     }
 }

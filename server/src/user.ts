@@ -1,24 +1,16 @@
 import { WebSocket } from "ws";
 import { UserInfo } from "./database";
 import Server from "./server";
-export default class User implements UserInfo {
-    email: string;
-    password: string;
-    username: string;
+export default class User{
+    info: UserInfo;
     private server: Server;
     private socket?: WebSocket;
     constructor(server: Server, info: UserInfo) {
         this.server = server;
-        this.email = info.email;
-        this.username = info.username;
-        this.password = info.password;
+        this.info = info;
     }
     save(): Promise<boolean> {
-        return this.server.database.replaceUserByEmail(this.email, {
-            email: this.email,
-            password: this.password,
-            username: this.username,
-        });
+        return this.server.database.replaceUserByEmail(this.info.email, this.info);
     }
     setSocket(socket: WebSocket) {
         this.socket = socket;

@@ -21,7 +21,7 @@ export default class EventHandler {
     private eventBindings: EventHandlers = {
         chat(user, data) {
             this.server.sendEventToAll("speak", {
-                text: `${user.username}: ${data.message}`,
+                text: `${user.info.username}: ${data.message}`,
             });
         },
     };

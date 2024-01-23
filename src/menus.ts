@@ -13,6 +13,31 @@ export function replaceWithMainMenu(game: Game) {
             },
         },
         {
+            label: "Log in",
+            callback(game, menu) {
+                game.pushState(
+                    new LoginState(
+                        game,
+                        async (_, info) => {
+                            const result = await fetch("/signin", {
+                                method: "post",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(info),
+                            });
+                            if (result.ok) {
+                                alert("Your account has been set.");
+                                game.popState();
+                            } else {
+                                const response = await result.json();
+                                alert(`error: ${response.message}`);
+                            }
+                        },
+                        false
+                    )
+                );
+            },
+        },
+        {
             label: "Create a new account",
             callback(game, menu) {
                 game.pushState(
