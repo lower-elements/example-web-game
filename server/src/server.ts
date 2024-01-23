@@ -100,7 +100,21 @@ export default class Server {
         this.app.use(express.json());
         this.app.post("/signin", this.onsignin.bind(this));
         this.app.post("/signup", this.onsignup.bind(this));
-        this.app.use(express.static("public", { maxAge: 2000000000 }));
+        this.app.use(
+            express.static("public", {
+                maxAge: 2000000000,
+                setHeaders(res, path) {
+                    const contentType = express.static.mime.lookup(path);
+                    if (
+                        contentType === "text/html" ||
+                        contentType === "text/css" ||
+                        contentType === "application/javascript"
+                    ) {
+                        res.setHeader("Cache-Control", "public, max-age=0");
+                    }
+                },
+            })
+        );
         // WebSocket setup
         this.wss.on("connection", this.handleNewConnection.bind(this));
         this.server.listen(this.port, () =>

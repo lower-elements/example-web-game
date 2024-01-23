@@ -43,24 +43,19 @@ export default class Menu extends State {
     }
     update(delta: number, events: UIEvent[]): void {
         for (const event of events) {
-            if (this.items.length > 0) {
-                if (
-                    event instanceof KeyboardEvent &&
-                    event.type === "keydown"
-                ) {
-                    switch (event.code) {
-                        case "ArrowUp":
-                            this.setIndex(this.index - 1);
-                            break;
-                        case "ArrowDown":
-                            this.setIndex(this.index + 1);
-                            break;
-                        case "Enter":
-                            this.activateSelectedItem();
-                            break;
-                    }
-                    // speak(event.code);
-                }
+            if (this.items.length > 0 && (event instanceof KeyboardEvent &&
+                                event.type === "keydown")) {
+                  switch (event.code) {
+                      case "ArrowUp":
+                          this.setIndex(this.index - 1);
+                          break;
+                      case "ArrowDown":
+                          this.setIndex(this.index + 1);
+                          break;
+                      case "Enter":
+                          this.activateSelectedItem();
+                          break;
+                  }
             }
         }
     }

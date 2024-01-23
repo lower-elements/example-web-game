@@ -22,6 +22,7 @@ export default class EventHandler {
         chat(user, data) {
             this.server.sendEventToAll("speak", {
                 text: `${user.info.username}: ${data.message}`,
+                buffer: "Public chat",
             });
         },
     };

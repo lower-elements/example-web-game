@@ -8,6 +8,7 @@ import React from "react";
 import { replaceWithMainMenu } from "../menus";
 import Client from "../network";
 import ChatState from "./chat";
+import BufferManager, { SwitchDirection } from "../buffer";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
 };
@@ -18,17 +19,9 @@ type HeldKeys = {
 export default class Gameplay extends State {
     player: Player;
     map: Map;
+    readonly bufferManager: BufferManager = new BufferManager();
     private blocked: boolean = false;
     private heldKeys: HeldKeys = {};
-    private onKeyPress: KeyHandlers = {
-        Escape: (event) => {
-            replaceWithMainMenu(this.game);
-        },
-        Slash: (event) =>
-            this.game.pushState(new ChatState(this.game, this.networkClient)),
-    };
-    private onKeyRelease: KeyHandlers = {};
-    private onKeyDown: KeyHandlers = {};
     private networkClient: Client;
     constructor(game: Game) {
         super(game);
@@ -89,4 +82,41 @@ export default class Gameplay extends State {
             }
         }
     }
+    private onKeyPress: KeyHandlers = {
+        Escape: (event) => {
+            replaceWithMainMenu(this.game);
+        },
+        Slash: (event) =>
+            this.game.pushState(new ChatState(this.game, this.networkClient)),
+        BracketLeft: (event) => {
+            this.bufferManager.move(
+                event.shiftKey ? SwitchDirection.top : SwitchDirection.backward
+            );
+            this.bufferManager.speakCurrentBuffer();
+        },
+        BracketRight: (event) => {
+            this.bufferManager.move(
+                event.shiftKey
+                    ? SwitchDirection.bottum
+                    : SwitchDirection.forward
+            );
+            this.bufferManager.speakCurrentBuffer();
+        },
+        Comma: (event) => {
+            this.bufferManager.currentBuffer.move(
+                event.shiftKey ? SwitchDirection.top : SwitchDirection.backward
+            );
+            this.bufferManager.speakCurrentBufferItem();
+        },
+        Period: (event) => {
+            this.bufferManager.currentBuffer.move(
+                event.shiftKey
+                    ? SwitchDirection.bottum
+                    : SwitchDirection.forward
+            );
+            this.bufferManager.speakCurrentBufferItem();
+        },
+    };
+    private onKeyRelease: KeyHandlers = {};
+    private onKeyDown: KeyHandlers = {};
 }

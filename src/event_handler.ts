@@ -2,7 +2,7 @@ import Game from "./game";
 import Client from "./network";
 import speak from "./speech";
 import Gameplay from "./states/gameplay";
-
+import { Buffer, BufferItem } from "./buffer";
 export type eventHandlerCallback = (
     this: EventHandler,
     data: Record<string, any>
@@ -27,6 +27,14 @@ export default class EventHandler {
     private eventBindings: EventHandlers = {
         speak(data) {
             speak(data.text ?? "", data.interupt ?? true);
+            if (data.buffer) {
+                let buffer =
+                    this.gameplay.bufferManager.getBufferByName(data.buffer) ??
+                    this.gameplay.bufferManager.insertBuffer(
+                        new Buffer(data.buffer)
+                    );
+                this.gameplay.bufferManager.insertIntoBuffer(buffer, new BufferItem(data.text ?? ""));
+            }
         },
     };
 }
