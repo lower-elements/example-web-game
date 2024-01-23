@@ -37,9 +37,11 @@ export default class Gameplay extends State {
         this.networkClient = new Client(this, {
             url: "ws://localhost:3000",
             onClose(client) {
+                replaceWithMainMenu(game);
                 speak("Connection closed");
             },
             onError(client) {
+                replaceWithMainMenu(game);
                 speak("error");
             },
         });
