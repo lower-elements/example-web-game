@@ -20,6 +20,7 @@ export default class Server {
     private readonly wss: WebSocket.Server;
     private readonly port: number;
     private readonly eventHandler: EventHandler;
+    private shouldLoop: boolean = true;
     readonly database: Database;
     users: Set<User> = new Set<User>();
     constructor(port: number = 3000, mongoClient: MongoClient) {
@@ -43,6 +44,25 @@ export default class Server {
     }
     sendBinaryToAll(data: Buffer) {
         this.users.forEach((user) => user.sendBinary(data));
+    }
+    private loop(): void {
+        for (let user of this.users) {
+            if ((user.pingTimer.elapsed ?? 0) >= 20000) {
+                user.ping();
+            }
+        }
+        if (this.shouldLoop) {
+            setTimeout(() => {
+                this.loop();
+            }, 10);
+        }
+    }
+    startMainLoop(): void {
+        this.shouldLoop = true;
+        this.loop();
+    }
+    stopMainLoop() {
+        this.shouldLoop = false;
     }
     private async handleNewConnection(
         ws: WebSocket,
@@ -120,6 +140,13 @@ export default class Server {
         this.server.listen(this.port, () =>
             console.log(`listening on ${this.port}`)
         );
+        this.startMainLoop();
+    }
+    async shutDown(): Promise<void> {
+        this.stopMainLoop();
+        this.wss.close();
+        this.server.closeAllConnections();
+        this.users.forEach(async (user) => await user.save());
     }
     private async onsignup(
         req: Request,
