@@ -86,6 +86,22 @@ export default class Game extends Component<GameProps, GameState> {
         this.update();
         return result;
     }
+    popStatesUntil<T extends State>(subtype?: new () => T): State|undefined {
+        let result: State|undefined;
+        while (this.stack.length > 0) {
+            result = this.stack[this.stack.length - 1];
+            result.onPop();
+            this.stack.pop();
+            if (subtype && result instanceof subtype) {
+                break; 
+            }
+        }
+        if (this.stack.length > 0) {
+            this.stack[this.stack.length - 1].onUncover();
+        }
+        this.update();
+        return result;
+    }
     replaceState(state: State): void {
         if (this.stack.length > 0) {
             this.popState();

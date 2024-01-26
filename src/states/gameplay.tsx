@@ -32,10 +32,12 @@ export default class Gameplay extends State {
                 speak("Welcome!");
             },
             onClose(client) {
+                game.popStatesUntil<Gameplay>();
                 replaceWithMainMenu(game);
                 speak("Connection closed");
             },
             onError(client) {
+                game.popStatesUntil<Gameplay>();
                 replaceWithMainMenu(game);
                 speak("error");
             },
