@@ -24,10 +24,6 @@ if npm run build; then
   cp -r sounds dist
   rm -r server/public
   cp -r dist server/public
-  # Compile server
-  pushd server
-  npx tsc
-  popd
   # Run server if specified
   if [ "$RUN_SERVER" = true ]; then
     echo "Running the server..."
