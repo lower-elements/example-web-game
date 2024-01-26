@@ -5,6 +5,7 @@ import SoundSource from "./map_elements/sound_source";
 import Zone from "./map_elements/zone";
 import Gameplay from "./states/gameplay";
 import Entity from "./entities/entity";
+import { ExportedBoundedBox, ExportedMap } from "./exported_map_types";
 /**
  * Represents the game's world map, with functions to spawning and querying map elements such as platforms, sound sources, zones, and entities.
  */
@@ -12,6 +13,7 @@ export default class Map extends BoundedBox {
     private platforms: Platform[] = [];
     private zones: Zone[] = [];
     private soundSources: SoundSource[] = [];
+    private loadedData: Object = {};
     entities: QuadTreeSet<Entity>;
     private gameplay: Gameplay;
     protected get allElements(): BoundedBox[] {
@@ -24,10 +26,12 @@ export default class Map extends BoundedBox {
         miny: number,
         maxy: number,
         minz: number,
-        maxz: number
+        maxz: number,
+        loadedData?: Object
     ) {
         super(minx, maxx, miny, maxy, minz, maxz);
         this.gameplay = gameplay;
+        this.loadedData = loadedData ?? {};
         this.entities = new QuadTreeSet<Entity>(
             { center: this.center, size: this.size },
             {
@@ -176,7 +180,7 @@ export default class Map extends BoundedBox {
             minz,
             maxz,
             path,
-            this.gameplay.player,
+            this.gameplay.player!,
             volume
         );
         this.soundSources.push(soundSource);
@@ -219,4 +223,36 @@ export default class Map extends BoundedBox {
         this.entities.forEach((entity) => entitiesToDestroy.push(entity));
         entitiesToDestroy.forEach((entity) => entity.destroy());
     }
+    dump(): ExportedMap {
+        return {
+            ...this.loadedData,
+            ...super.dump(),
+            platforms: dumpArray(this.platforms),
+            zones: dumpArray(this.zones),
+            soundSources: dumpArray(this.soundSources),
+        };
+    }
+    async loadFromDump(data: ExportedMap): Promise<void> {
+        this.minx = data.minx;
+        this.maxy = data.maxx;
+        this.miny = data.miny;
+        this.maxy = data.maxy;
+        this.minz = data.minz;
+        this.maxz = data.maxz;
+        this.platforms = data.platforms.map((element) =>
+            Platform.loadFromDump(element)
+        );
+        this.zones = data.zones.map((element) => Zone.loadFromDump(element));
+        this.soundSources = data.soundSources.map((element) =>
+            SoundSource.loadFromDump(
+                element,
+                this.gameplay.game,
+                this.gameplay.player!
+            )
+        );
+        await this.load();
+    }
+}
+function dumpArray(arr: any[]): any[] {
+    return arr.map((element) => element.dump());
 }

@@ -1,4 +1,5 @@
-type Point = {x: number, y: number, z: number};
+import { ExportedBoundedBox } from "../exported_map_types";
+type Point = { x: number; y: number; z: number };
 export default class BoundedBox {
     minx: number;
     maxx: number;
@@ -63,8 +64,12 @@ export default class BoundedBox {
         const centerZ = (this.minz + this.maxz) / 2;
         return { x: centerX, y: centerY, z: centerZ };
     }
-    private calculateSize(): Point{
-        return {x: this.maxx-this.minx, y: this.maxy-this.miny, z: this.maxz-this.minz}
+    private calculateSize(): Point {
+        return {
+            x: this.maxx - this.minx,
+            y: this.maxy - this.miny,
+            z: this.maxz - this.minz,
+        };
     }
     translate(offsetX: number, offsetY: number, offsetZ: number): void {
         this.minx += offsetX;
@@ -73,6 +78,16 @@ export default class BoundedBox {
         this.maxy += offsetY;
         this.minz += offsetZ;
         this.maxz += offsetZ;
+    }
+    dump(): ExportedBoundedBox {
+        return {
+            minx: this.minx,
+            maxx: this.maxx,
+            miny: this.miny,
+            maxy: this.maxy,
+            minz: this.minz,
+            maxz: this.maxz,
+        };
     }
     update(delta: number): void {}
     destroy(): void {}

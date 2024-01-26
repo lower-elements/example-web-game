@@ -1,6 +1,7 @@
 import AudioSource from "../audio_source";
 import Entity from "../entities/entity";
 import EventEmitter, { EventCallback } from "../event_emitter";
+import { ExportedSoundSource } from "../exported_map_types";
 import Game from "../game";
 import BoundedBox from "./bounded_box";
 
@@ -11,6 +12,8 @@ export default class SoundSource extends BoundedBox {
     private updateEventCallback: EventCallback<Entity>;
     private ref: Entity;
     private audioContext: AudioContext;
+    private soundPath: string;
+    private volume: number;
     events: EventEmitter<SoundSource> = new EventEmitter<SoundSource>();
     ready: boolean = false;
     constructor(
@@ -27,6 +30,8 @@ export default class SoundSource extends BoundedBox {
     ) {
         super(minx, maxx, miny, maxy, minz, maxz);
         this.audioContext = game.audioContext;
+        this.soundPath = soundPath;
+        this.volume = volume;
         this.sound = new AudioSource(game.audioContext, soundPath, true, false);
         this.sound.mediaElement.addEventListener(
             "canplaythrough",
@@ -66,5 +71,29 @@ export default class SoundSource extends BoundedBox {
     destroy() {
         this.ref.cancel("move", this.updateEventCallback);
         this.sound.stop();
+    }
+    dump(): ExportedSoundSource {
+        return {
+            ...super.dump(),
+            soundPath: this.soundPath,
+            volume: this.volume,
+        };
+    }
+    static loadFromDump(
+        data: ExportedSoundSource,
+        game: Game,
+        ref: Entity
+    ): SoundSource {
+        return new SoundSource(
+            game,
+            data.minx,
+            data.maxx,
+            data.miny,
+            data.maxy,
+            data.minz,
+            data.maxz,
+            data.soundPath,
+            ref
+        );
     }
 }

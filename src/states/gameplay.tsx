@@ -3,8 +3,6 @@ import Player from "../entities/player";
 import Game from "../game";
 import Map from "../map";
 import speak from "../speech";
-import InputBox from "../gui/input_box";
-import React from "react";
 import { replaceWithMainMenu } from "../menus";
 import Client from "../network";
 import ChatState from "./chat";
@@ -17,21 +15,22 @@ type HeldKeys = {
 };
 
 export default class Gameplay extends State {
-    player: Player;
-    map: Map;
+    player: Player | null = null;
+    map: Map | null = null;
     readonly bufferManager: BufferManager = new BufferManager();
     private blocked: boolean = false;
     private heldKeys: HeldKeys = {};
     private networkClient: Client;
     constructor(game: Game) {
         super(game);
-        this.map = new Map(this, 0, 10, 0, 10, 0, 10);
-        this.player = new Player(this.game, 0, 0, 0, this.map);
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         const host = window.location.hostname;
         const port = window.location.port ? `:${window.location.port}` : "";
         this.networkClient = new Client(this, {
             url: `${protocol}//${host}${port}`,
+            onOpen(client) {
+                speak("Welcome!");
+            },
             onClose(client) {
                 replaceWithMainMenu(game);
                 speak("Connection closed");
@@ -44,11 +43,11 @@ export default class Gameplay extends State {
     }
     initialize(): void {}
     async onPush(): Promise<void> {
-        speak("Welcome!");
+        speak("Connecting...");
     }
     onCover(): void {}
     onUncover(): void {
-        // this.player.updateListenerPosition();
+        this.player?.updateListenerPosition();
     }
     onPop(): void {
         this.networkClient.close();
@@ -82,11 +81,33 @@ export default class Gameplay extends State {
             }
         }
     }
+    private destroyMap(): void {
+        this.map?.destroy();
+        this.map = null;
+        this.player = null;
+    }
+    private setMap(
+        map: Map,
+        position: { x?: number; y?: number; z?: number }
+    ): void {
+        if (this.map) {
+            this.destroyMap();
+        }
+        this.map = map;
+        this.player = new Player(
+            this.game,
+            position.x,
+            position.y,
+            position.z,
+            this.map
+        );
+    }
     private onKeyPress: KeyHandlers = {
         Escape: (event) => {
-            replaceWithMainMenu(this.game);
+            !event.repeat && replaceWithMainMenu(this.game);
         },
         Slash: (event) =>
+            !event.repeat &&
             this.game.pushState(new ChatState(this.game, this.networkClient)),
         BracketLeft: (event) => {
             this.bufferManager.move(
@@ -116,7 +137,48 @@ export default class Gameplay extends State {
             );
             this.bufferManager.speakCurrentBufferItem();
         },
+        KeyC: () => {
+            this.player &&
+                speak(`${this.player.x}, ${this.player.y}, ${this.player.z}`);
+        },
     };
     private onKeyRelease: KeyHandlers = {};
-    private onKeyDown: KeyHandlers = {};
+    private onKeyDown: KeyHandlers = {
+        KeyW: () => {
+            if (this.player && this.player.canMove) {
+                this.player.move(
+                    this.player.x,
+                    this.player.y + 1,
+                    this.player.z
+                );
+            }
+        },
+        KeyD: () => {
+            if (this.player && this.player.canMove) {
+                this.player.move(
+                    this.player.x + 1,
+                    this.player.y,
+                    this.player.z
+                );
+            }
+        },
+        KeyS: () => {
+            if (this.player && this.player.canMove) {
+                this.player.move(
+                    this.player.x,
+                    this.player.y - 1,
+                    this.player.z
+                );
+            }
+        },
+        KeyA: () => {
+            if (this.player && this.player.canMove) {
+                this.player.move(
+                    this.player.x - 1,
+                    this.player.y,
+                    this.player.z
+                );
+            }
+        },
+    };
 }
