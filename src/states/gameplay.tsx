@@ -7,6 +7,8 @@ import { replaceWithMainMenu } from "../menus";
 import Client from "../network";
 import ChatState from "./chat";
 import BufferManager, { SwitchDirection } from "../buffer";
+import { ExportedMap } from "../exported_map_types";
+import { Point } from "../map_elements/bounded_box";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
 };
@@ -52,6 +54,7 @@ export default class Gameplay extends State {
         this.player?.updateListenerPosition();
     }
     onPop(): void {
+        this.map?.destroy();
         this.networkClient.close();
     }
     update(delta: number, events: UIEvent[]): void {
@@ -103,6 +106,28 @@ export default class Gameplay extends State {
             position.z,
             this.map
         );
+    }
+    async loadMap(map: ExportedMap, position: Point): Promise<void> {
+        this.setMap(
+            new Map(
+                this,
+                map.minx,
+                map.maxx,
+                map.miny,
+                map.maxy,
+                map.minz,
+                map.maxz,
+                map
+            ),
+            position
+        );
+        this.blocked = true;
+        try {
+            this.player?.updateListenerPosition();
+            await this.map?.loadFromDump(map);
+        } finally {
+            this.blocked = false;
+        }
     }
     private onKeyPress: KeyHandlers = {
         Escape: (event) => {

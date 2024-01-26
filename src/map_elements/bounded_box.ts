@@ -1,5 +1,5 @@
 import { ExportedBoundedBox } from "../exported_map_types";
-type Point = { x: number; y: number; z: number };
+export type Point = { x: number; y: number; z: number };
 export default class BoundedBox {
     minx: number;
     maxx: number;
