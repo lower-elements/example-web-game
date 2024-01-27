@@ -49,7 +49,9 @@ export default class Gameplay extends State {
     async onPush(): Promise<void> {
         speak("Connecting...");
     }
-    onCover(): void {}
+    onCover(): void {
+        this.heldKeys = {};
+    }
     onUncover(): void {
         this.player?.updateListenerPosition();
     }
