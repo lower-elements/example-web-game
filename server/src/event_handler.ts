@@ -25,5 +25,24 @@ export default class EventHandler {
                 buffer: "Public chat",
             });
         },
+        move(user, data) {
+            let player = user.player;
+            if (player && player.canMove) {
+                switch (data.direction) {
+                    case "forward":
+                        player.move(player.x, player.y + 1, player.z);
+                        break;
+                    case "right":
+                        player.move(player.x + 1, player.y, player.z);
+                        break;
+                    case "backward":
+                        player.move(player.x, player.y - 1, player.z);
+                        break;
+                    case "left":
+                        player.move(player.x - 1, player.y, player.z);
+                        break;
+                }
+            }
+        },
     };
 }

@@ -109,6 +109,14 @@ export default class Gameplay extends State {
             this.map
         );
     }
+    private sendMovementUpdate(direction: string) {
+        this.networkClient.sendEvent("move", {
+            direction: direction,
+            x: this.player?.x,
+            y: this.player?.y,
+            z: this.player?.z,
+        });
+    }
     async loadMap(map: ExportedMap, position: Point): Promise<void> {
         this.setMap(
             new Map(
@@ -182,6 +190,7 @@ export default class Gameplay extends State {
                     this.player.y + 1,
                     this.player.z
                 );
+                this.sendMovementUpdate("forward");
             }
         },
         KeyD: () => {
@@ -191,6 +200,7 @@ export default class Gameplay extends State {
                     this.player.y,
                     this.player.z
                 );
+                this.sendMovementUpdate("right");
             }
         },
         KeyS: () => {
@@ -200,6 +210,7 @@ export default class Gameplay extends State {
                     this.player.y - 1,
                     this.player.z
                 );
+                this.sendMovementUpdate("backward");
             }
         },
         KeyA: () => {
@@ -209,6 +220,7 @@ export default class Gameplay extends State {
                     this.player.y,
                     this.player.z
                 );
+                this.sendMovementUpdate("left");
             }
         },
     };
