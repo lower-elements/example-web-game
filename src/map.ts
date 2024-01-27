@@ -15,6 +15,7 @@ export default class Map extends BoundedBox {
     private soundSources: SoundSource[] = [];
     private loadedData: Object = {};
     entities: QuadTreeSet<Entity>;
+    private idToEntityMap: Record<string, Entity> = {};
     private gameplay: Gameplay;
     protected get allElements(): BoundedBox[] {
         return [...this.platforms, ...this.zones, ...this.soundSources];
@@ -128,10 +129,15 @@ export default class Map extends BoundedBox {
     }
     addEntity(entity: Entity): Entity {
         this.entities.add(entity);
+        this.idToEntityMap[entity.id] = entity;
         return entity;
     }
     removeEntity(entity: Entity): boolean {
+        delete this.idToEntityMap[entity.id];
         return this.entities.delete(entity);
+    }
+    getEntityById(id: string): Entity | undefined {
+        return this.idToEntityMap[id];
     }
     spawnPlatform(
         minx: number,
@@ -239,11 +245,13 @@ export default class Map extends BoundedBox {
         this.maxy = data.maxy;
         this.minz = data.minz;
         this.maxz = data.maxz;
-        this.platforms = data.platforms.map((element) =>
+        this.platforms = (data.platforms ?? []).map((element) =>
             Platform.loadFromDump(element)
         );
-        this.zones = data.zones.map((element) => Zone.loadFromDump(element));
-        this.soundSources = data.soundSources.map((element) =>
+        this.zones = (data.zones ?? []).map((element) =>
+            Zone.loadFromDump(element)
+        );
+        this.soundSources = (data.soundSources ?? []).map((element) =>
             SoundSource.loadFromDump(
                 element,
                 this.gameplay.game,

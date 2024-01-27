@@ -4,6 +4,8 @@ import speak from "./speech";
 import Gameplay from "./states/gameplay";
 import { Buffer, BufferItem } from "./buffer";
 import { ExportedMap } from "./exported_map_types";
+import Entity from "./entities/entity";
+import Player from "./entities/player";
 export type eventHandlerCallback = (
     this: EventHandler,
     data: Record<string, any>
@@ -40,8 +42,46 @@ export default class EventHandler {
                 );
             }
         },
-        reloadMap(data) {
+        loadMap(data) {
             this.gameplay.loadMap(data.map, data.position);
+        },
+        spawnEntities(data) {
+            for (let entity of data.entities) {
+                this.gameplay.map?.addEntity(
+                    new Entity(
+                        this.game,
+                        entity.id,
+                        entity.x,
+                        entity.y,
+                        entity.z,
+                        this.gameplay.map
+                    )
+                );
+            }
+        },
+        removeEntities(data) {
+            for (let id of data.entities) {
+                let entity = this.gameplay.map?.getEntityById(id);
+                if (entity) {
+                    this.gameplay.map?.removeEntity(entity);
+                }
+            }
+        },
+        entityPlaySound(data) {
+            this.gameplay.map
+                ?.getEntityById(data.id)
+                ?.playSound(data.path, data.looping);
+        },
+        entityMove(data) {
+            const entity = this.gameplay.map?.getEntityById(data.id);
+            if (entity) {
+                entity.move(
+                    data.x,
+                    data.y,
+                    data.z,
+                    data.playSound && !(entity instanceof Player)
+                );
+            }
         },
     };
 }

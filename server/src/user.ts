@@ -2,14 +2,19 @@ import { WebSocket } from "ws";
 import { UserInfo } from "./database";
 import Server from "./server";
 import { Timer } from "./utils";
+import Player from "./entities/player";
 export default class User {
     info: UserInfo;
+    player?: Player;
     private server: Server;
     private socket?: WebSocket;
     readonly pingTimer: Timer = new Timer();
     constructor(server: Server, info: UserInfo) {
         this.server = server;
         this.info = info;
+    }
+    setPlayer(player: Player){
+        this.player = player;
     }
     save(): Promise<boolean> {
         return this.server.database.replaceUserByEmail(

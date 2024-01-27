@@ -6,6 +6,8 @@ import Database, { UserInfo } from "./database";
 import Cookie from "cookie";
 import User from "./user";
 import EventHandler, { eventHandlerCallback } from "./event_handler";
+import Map from "./map";
+import Player from "./entities/player";
 /**
  * Represents the json events the client and server exchange.
  */
@@ -23,9 +25,14 @@ export default class Server {
     private shouldLoop: boolean = true;
     readonly database: Database;
     users: Set<User> = new Set<User>();
+    maps: Record<string, Map>;
     constructor(port: number = 3000, mongoClient: MongoClient) {
         this.port = port;
         this.server = http.createServer(this.app);
+        // This will be removed soon, currently as a placeholder until we have dynamic map loading.
+        const testMap: Map = new Map(this, 0, 25, 0, 25, 0, 25);
+        testMap.spawnPlatform(0, 25, 0, 25, 0, 0, "grass");
+        this.maps = {main: testMap};
         this.wss = new WebSocket.Server({
             server: this.server,
             maxPayload: 1024 * 1024, //1 megabytes
@@ -71,17 +78,20 @@ export default class Server {
         const cookies = req.headers.cookie;
         try {
             if (cookies) {
-                const userInfo = Cookie.parse(cookies);
-                const user = await this.database.getUserByEmailAndPassword(
-                    userInfo.email,
-                    userInfo.password
+                const userInfoCookie = Cookie.parse(cookies);
+                const userInfo = await this.database.getUserByEmailAndPassword(
+                    userInfoCookie.email,
+                    userInfoCookie.password
                 );
-                if (user) {
-                    return this.acceptConnection(ws, new User(this, user));
+                if (userInfo) {
+                    const user = new User(this, userInfo);
+                    const player = new Player(this, user, 13, 13, 0, this.maps.main);
+                    return this.acceptConnection(ws, user);
                 }
             }
             ws.close();
         } catch (err) {
+            console.log(err);
             ws.close();
             throw err;
         }
@@ -89,6 +99,7 @@ export default class Server {
     private acceptConnection(ws: WebSocket, user: User) {
         user.setSocket(ws);
         this.addUser(user);
+        user.player?.reloadMap();
         console.log(
             `WebSocket connected, welcome ${user.info.username}, ${user.info.email}. Password hash: ${user.info.password}`
         );

@@ -125,6 +125,8 @@ export default class Gameplay extends State {
         try {
             this.player?.updateListenerPosition();
             await this.map?.loadFromDump(map);
+        } catch (err) {
+            console.log(err);
         } finally {
             this.blocked = false;
         }
