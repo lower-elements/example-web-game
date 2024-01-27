@@ -42,9 +42,11 @@ export default class Server {
     }
     addUser(user: User): void {
         this.users.add(user);
+        this.sendEventToAll("speak", {text: `${user.info.username} just came online`, buffer: "Public chat", sound: "ui/online.ogg"})
     }
     removeUser(user: User): void {
         this.users.delete(user);
+        this.sendEventToAll("speak", {text: `${user.info.username} just went offline`, buffer: "Public chat", sound: "ui/offline.ogg"})
     }
     sendEventToAll(event: string, data: Object) {
         this.users.forEach((user) => user.sendEvent(event, data));
