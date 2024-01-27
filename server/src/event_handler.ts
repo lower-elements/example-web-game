@@ -23,6 +23,7 @@ export default class EventHandler {
             this.server.sendEventToAll("speak", {
                 text: `${user.info.username}: ${data.message}`,
                 buffer: "Public chat",
+                sound: "ui/chat.ogg",
             });
         },
         move(user, data) {

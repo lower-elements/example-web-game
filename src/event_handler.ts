@@ -6,6 +6,7 @@ import { Buffer, BufferItem } from "./buffer";
 import { ExportedMap } from "./exported_map_types";
 import Entity from "./entities/entity";
 import Player from "./entities/player";
+import AudioSource from "./audio_source";
 export type eventHandlerCallback = (
     this: EventHandler,
     data: Record<string, any>
@@ -20,6 +21,7 @@ export default class EventHandler {
     constructor(gameplay: Gameplay, client: Client) {
         this.gameplay = gameplay;
         this.game = gameplay.game;
+        
         this.client = client;
     }
     triggerEvent(event: string, data: Object): void {
@@ -29,6 +31,9 @@ export default class EventHandler {
     }
     private eventBindings: EventHandlers = {
         speak(data) {
+            if (data.sound){
+                new AudioSource(this.game.audioContext, data.sound).play();
+            }
             speak(data.text ?? "", data.interupt ?? true);
             if (data.buffer) {
                 let buffer =
