@@ -9,6 +9,9 @@ import ChatState from "./chat";
 import BufferManager, { SwitchDirection } from "../buffer";
 import { ExportedMap } from "../exported_map_types";
 import { Point } from "../map_elements/bounded_box";
+import { ReactNode } from "react";
+import OnlinePeopleGrid from "../gui/players_list";
+import React from "react";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
 };

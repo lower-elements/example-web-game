@@ -24,6 +24,10 @@
     "webpack-manifest-plugin": "^5.0.0"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.15.6",
+    "@mui/x-data-grid": "^6.19.2",
     "fast-quadtree-ts": "^0.0.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
