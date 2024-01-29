@@ -1,0 +1,20 @@
+version: "3"
+services:
+    web:
+        build: .
+        volumes:
+            - ../dist:/app/public
+        restart: unless-stopped
+        ports:
+            - "3000:3000"
+        environment:
+            MONGO_USER: ${DB_USERNAME}
+            MONGO_PASSWORD: ${DB_PASSWORD}
+
+    mongo:
+        image: mongo:latest
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+        ports:
+            - "27017:27017"
