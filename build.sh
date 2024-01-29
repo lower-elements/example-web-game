@@ -22,8 +22,6 @@ done
 if npm run build; then
   echo "Client build successful."
   cp -r sounds dist
-  rm -r server/public
-  cp -r dist server/public
   # Run server if specified
   if [ "$RUN_SERVER" = true ]; then
     echo "Running the server..."
