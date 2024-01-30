@@ -1,3 +1,14 @@
+export function focusableElementsIn(element: HTMLElement): NodeList | null {
+    const focusableSelectors = [
+        "a[href]",
+        "button:not([disabled])",
+        "textarea:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
+        '[tabindex]:not([tabindex="-1"])', // Includes elements with positive tabindex
+    ].join(", ");
+    return element.querySelectorAll(focusableSelectors);
+}
 export function randint(min: number, max: number): number {
     // Ensure min and max are integers
     const minInt = Math.ceil(min);

@@ -7,6 +7,7 @@ import { ExportedMap } from "./exported_map_types";
 import Entity from "./entities/entity";
 import Player from "./entities/player";
 import AudioSource from "./audio_source";
+import ServerInfo from "./states/server_info";
 export type eventHandlerCallback = (
     this: EventHandler,
     data: Record<string, any>
@@ -89,7 +90,7 @@ export default class EventHandler {
             }
         },
         serverInfo(data) {
-            // to do
+            this.game.pushState(new ServerInfo(this.game, data.onlineList));
         },
     };
 }
