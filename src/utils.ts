@@ -1,4 +1,4 @@
-export function focusableElementsIn(element: HTMLElement): NodeList | null {
+export function focusableElementsIn(element: HTMLElement): NodeList {
     const focusableSelectors = [
         "a[href]",
         "button:not([disabled])",

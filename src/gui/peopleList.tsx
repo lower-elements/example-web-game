@@ -23,7 +23,7 @@ export default class PeopleList extends Component<PeopleListProps> {
     }
     componentDidMount(): void {
         if (this.props.AutoFocus && this.ref.current) {
-            (focusableElementsIn(this.ref.current)?.[0] as HTMLElement).focus();
+            (focusableElementsIn(this.ref.current)[0] as HTMLElement)?.focus();
         }
     }
     render(): React.ReactNode {
