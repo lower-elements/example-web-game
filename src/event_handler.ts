@@ -21,7 +21,7 @@ export default class EventHandler {
     constructor(gameplay: Gameplay, client: Client) {
         this.gameplay = gameplay;
         this.game = gameplay.game;
-        
+
         this.client = client;
     }
     triggerEvent(event: string, data: Object): void {
@@ -31,7 +31,7 @@ export default class EventHandler {
     }
     private eventBindings: EventHandlers = {
         speak(data) {
-            if (data.sound){
+            if (data.sound) {
                 new AudioSource(this.game.audioContext, data.sound).play();
             }
             speak(data.text ?? "", data.interupt ?? true);
@@ -87,6 +87,9 @@ export default class EventHandler {
                     data.playSound && !(entity instanceof Player)
                 );
             }
+        },
+        serverInfo(data) {
+            // to do
         },
     };
 }

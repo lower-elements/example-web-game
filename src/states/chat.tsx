@@ -18,13 +18,7 @@ export default class ChatState extends State {
             />
         );
     }
-    update(delta: number, events: UIEvent[]): void {
-        super.update(delta, events);
-        for (event of events) {
-            if (event instanceof KeyboardEvent && event.code === "Escape") {
-                this.game.popState();
-                break;
-            }
-        }
+    onEscape() {
+        this.game.popState();
     }
 }

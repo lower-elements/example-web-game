@@ -19,16 +19,8 @@ export default class LoginState extends State {
         this.askForUsername = askForUsername;
         this.setupGui();
     }
-    update(delta: number, events: UIEvent[]): void {
-        for (event of events) {
-            if (
-                event instanceof KeyboardEvent &&
-                event.type === "keydown" &&
-                event.code === "Escape"
-            ) {
-                this.game.popState();
-            }
-        }
+    onEscape(): void {
+        this.game.popState();
     }
     private setupGui(): void {
         this.gui = (

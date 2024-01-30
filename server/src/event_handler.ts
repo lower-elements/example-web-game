@@ -27,7 +27,7 @@ export default class EventHandler {
             });
         },
         move(user, data) {
-            let player = user.player;
+            let {player} = user;
             if (player && player.canMove) {
                 switch (data.direction) {
                     case "forward":
@@ -44,6 +44,16 @@ export default class EventHandler {
                         break;
                 }
             }
+        },
+        getServerInfo(user, data) {
+            if (!this.server.users.size) {
+                return;
+            }
+            const onlineList = [];
+            for (let onlineUser of this.server.users) {
+                onlineList.push({ username: onlineUser.info.username });
+            }
+            user.sendEvent("serverInfo", { onlineList: onlineList });
         },
     };
 }

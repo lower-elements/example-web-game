@@ -21,13 +21,17 @@
     </head>
 
     <body>
-        <button id="test">test</button>
-        <hr />
-        <div style="display: none" id="game" tabindex="0">
-            <label for="game"> Game area </label>
-            <div id="content"></div>
+        <button id="test" autofocus>test</button>
+        <div
+            id="game-area"
+            tabindex="0"
+            aria-labelledby="game-area-label"
+            role="application"
+            hidden
+        >
+            <label id="game-area-label" for="game-area">Game Area</label>
         </div>
-        <hr />
+        <div style="display: none" id="game"></div>
         <div
             aria-live="assertive"
             id="speech_interupt"

@@ -1,35 +1,42 @@
-import { Component, ReactElement, ReactNode } from "react";
-import speak from "./speech";
-import Gameplay from "./states/gameplay";
-import Menu from "./states/menu";
+import { Component, PropsWithRef, ReactNode } from "react";
 import State from "./states/state";
 import React from "react";
-import LoginState from "./states/login";
 import { replaceWithMainMenu } from "./menus";
-interface GameProps {
-    gameContainer: HTMLDivElement;
-}
 interface GameState {
     fps: number;
     currentGui: ReactNode | null;
 }
-export default class Game extends Component<GameProps, GameState> {
+interface GameProps {
+    gameArea: HTMLDivElement;
+}
+export default class Game extends Component<
+    PropsWithRef<GameProps>,
+    GameState
+> {
     static noState = null;
     audioContext: AudioContext;
-    private events: UIEvent[] = [];
+    private events: KeyboardEvent[] = [];
     private stack: State[] = [];
     private lastFrameTime: number = 0;
     private frameCount: number = 0;
     state: GameState = { currentGui: Game.noState, fps: 0 };
-    gameContainer: HTMLDivElement;
-    constructor(props: GameProps) {
+    private gameArea: HTMLDivElement;
+    constructor(props: PropsWithRef<GameProps>) {
         super(props);
-        this.gameContainer = props.gameContainer;
+        this.gameArea = props.gameArea;
         this.audioContext = new AudioContext();
-        this.subscribeToEvents();
         this.setListenerOrientation(0);
         replaceWithMainMenu(this);
         this.gameLoop();
+        this.subscribeToEvents();
+    }
+    private updateGameArea(shouldBeVisible: boolean): void {
+        if (shouldBeVisible) {
+            this.gameArea.hidden = false;
+            this.gameArea.focus();
+        } else {
+            this.gameArea.hidden = true;
+        }
     }
     render(): React.ReactNode {
         return (
@@ -44,9 +51,7 @@ export default class Game extends Component<GameProps, GameState> {
             let currentState = this.stack[this.stack.length - 1];
             const { gui } = currentState;
             this.setState({ currentGui: gui });
-            if (!gui) {
-                this.props.gameContainer.focus();
-            }
+            this.updateGameArea(!gui);
         }
     }
     setListenerOrientation(degrees: number): void {
@@ -86,14 +91,14 @@ export default class Game extends Component<GameProps, GameState> {
         this.update();
         return result;
     }
-    popStatesUntil<T extends State>(subtype?: new () => T): State|undefined {
-        let result: State|undefined;
+    popStatesUntil<T extends State>(subtype?: new () => T): State | undefined {
+        let result: State | undefined;
         while (this.stack.length > 0) {
             result = this.stack[this.stack.length - 1];
             result.onPop();
             this.stack.pop();
             if (subtype && result instanceof subtype) {
-                break; 
+                break;
             }
         }
         if (this.stack.length > 0) {
@@ -126,17 +131,22 @@ export default class Game extends Component<GameProps, GameState> {
         }
         requestAnimationFrame(() => this.gameLoop());
     }
-    private addEvent(event: UIEvent): void {
+    private addEvent(event: KeyboardEvent): void {
         this.events.push(event);
-        event.stopPropagation();
     }
-    private subscribeToEvents() {
+    private subscribeToEvents(): void {
+        document.addEventListener("keydown", (event) => {
+            if (
+                event.key === "Escape" &&
+                this.stack.length > 0 &&
+                !event.repeat
+            ) {
+                const state = this.stack[this.stack.length - 1];
+                state.onEscape();
+            }
+        });
         const eventHandler = this.addEvent.bind(this);
-        this.gameContainer.onkeydown = eventHandler;
-        this.gameContainer.onkeyup = eventHandler;
-    }
-    private unsubscribeFromEvents() {
-        this.gameContainer.onkeydown = null;
-        this.gameContainer.onkeyup = null;
+        this.gameArea.onkeydown = eventHandler;
+        this.gameArea.onkeyup = eventHandler;
     }
 }

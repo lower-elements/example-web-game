@@ -10,7 +10,6 @@ import BufferManager, { SwitchDirection } from "../buffer";
 import { ExportedMap } from "../exported_map_types";
 import { Point } from "../map_elements/bounded_box";
 import { ReactNode } from "react";
-import OnlinePeopleGrid from "../gui/players_list";
 import React from "react";
 type KeyHandlers = {
     [key: string]: (event: KeyboardEvent) => void;
@@ -62,27 +61,27 @@ export default class Gameplay extends State {
         this.map?.destroy();
         this.networkClient.close();
     }
-    update(delta: number, events: UIEvent[]): void {
+    update(delta: number, events: KeyboardEvent[]): void {
         if (this.blocked) {
             return;
         }
         for (let event of events) {
-            if (event instanceof KeyboardEvent) {
-                let { code } = event;
-                switch (event.type) {
-                    case "keydown":
-                        this.heldKeys[code] = event;
-                        if (code in this.onKeyPress) {
-                            this.onKeyPress[code](event);
-                        }
-                        break;
-                    case "keyup":
-                        delete this.heldKeys[code];
-                        if (code in this.onKeyRelease) {
-                            this.onKeyRelease[code](event);
-                        }
-                        break;
-                }
+            let { code } = event;
+            switch (event.type) {
+                case "keydown":
+                    this.heldKeys[code] = event;
+                    if (code in this.onKeyPress) {
+                        this.onKeyPress[code](event);
+                        event.preventDefault();
+                    }
+                    break;
+                case "keyup":
+                    delete this.heldKeys[code];
+                    if (code in this.onKeyRelease) {
+                        this.onKeyRelease[code](event);
+                        event.preventDefault();
+                    }
+                    break;
             }
         }
         for (let code of Object.keys(this.heldKeys)) {
@@ -90,6 +89,9 @@ export default class Gameplay extends State {
                 this.onKeyDown[code](this.heldKeys[code]);
             }
         }
+    }
+    onEscape(): void {
+        replaceWithMainMenu(this.game);
     }
     private destroyMap(): void {
         this.map?.destroy();
@@ -145,9 +147,8 @@ export default class Gameplay extends State {
         }
     }
     private onKeyPress: KeyHandlers = {
-        Escape: (event) => {
-            !event.repeat && replaceWithMainMenu(this.game);
-        },
+        F2: (event) =>
+            !event.repeat && this.networkClient?.sendEvent("getServerInfo", {}),
         Slash: (event) =>
             !event.repeat &&
             this.game.pushState(new ChatState(this.game, this.networkClient)),

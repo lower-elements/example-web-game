@@ -9,9 +9,12 @@ function initialize() {
     div.style.display = "block";
     div.focus();
     document.getElementById("test")!.style.display = "none";
-    let content= document.getElementById("content") as HTMLDivElement;
-    const game = <Game gameContainer={div} />;
-    ReactDOM.render(game, content);
+    const game = (
+        <Game
+            gameArea={document.getElementById("game-area") as HTMLDivElement}
+        />
+    );
+    ReactDOM.render(game, div);
 }
 
 document.addEventListener("DOMContentLoaded", function () {

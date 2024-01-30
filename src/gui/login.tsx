@@ -65,7 +65,7 @@ export default class LoginForm extends Component<
     render() {
         const { email, username, password, isValidEmail } = this.state;
         return (
-            <form onSubmit={this.handleSubmit}>
+            <form onSubmit={this.handleSubmit} role="application">
                 <div>
                     <label htmlFor="email">Email:</label>
                     <input
@@ -78,7 +78,7 @@ export default class LoginForm extends Component<
                         style={{ borderColor: isValidEmail ? "green" : "red" }}
                     />
                     {!isValidEmail && (
-                        <p>Please enter a valid email address.</p>
+                        <p tabIndex={0}>Please enter a valid email address.</p>
                     )}
                 </div>
                 {(this.props.askForUsername ?? true) && (

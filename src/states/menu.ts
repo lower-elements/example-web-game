@@ -41,21 +41,23 @@ export default class Menu extends State {
     onUncover(): void {
         this.setIndex(this.index);
     }
-    update(delta: number, events: UIEvent[]): void {
+    update(delta: number, events: KeyboardEvent[]): void {
         for (const event of events) {
-            if (this.items.length > 0 && (event instanceof KeyboardEvent &&
-                                event.type === "keydown")) {
-                  switch (event.code) {
-                      case "ArrowUp":
-                          this.setIndex(this.index - 1);
-                          break;
-                      case "ArrowDown":
-                          this.setIndex(this.index + 1);
-                          break;
-                      case "Enter":
-                          this.activateSelectedItem();
-                          break;
-                  }
+            if (this.items.length > 0 && event.type === "keydown") {
+                switch (event.code) {
+                    case "ArrowUp":
+                        this.setIndex(this.index - 1);
+                        event.preventDefault();
+                        break;
+                    case "ArrowDown":
+                        this.setIndex(this.index + 1);
+                        event.preventDefault();
+                        break;
+                    case "Enter":
+                        this.activateSelectedItem();
+                        event.preventDefault();
+                        break;
+                }
             }
         }
     }
@@ -63,7 +65,9 @@ export default class Menu extends State {
         this.items[this.index].callback(this.game, this);
     }
     setIndex(index: number): void {
-        if (this.items.length === 0) return;
+        if (this.items.length === 0) {
+            return;
+        }
         this.index =
             ((index % this.items.length) + this.items.length) %
             this.items.length;
@@ -71,7 +75,9 @@ export default class Menu extends State {
         this.moveSound.play();
     }
     speakCurrentItem(interupt: boolean = true): void {
-        if (this.index >= 0) speak(this.items[this.index].label, interupt);
+        if (this.index >= 0) {
+            speak(this.items[this.index].label, interupt);
+        }
     }
 }
 export interface MenuItem {

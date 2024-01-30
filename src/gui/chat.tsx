@@ -36,18 +36,16 @@ export default class ChatGui extends React.Component<
     render() {
         const { message } = this.state;
         return (
-            <div className="chat">
-                <div className="input-area">
-                    <textarea
-                        autoFocus
-                        value={message}
-                        onChange={this.handleInputChange.bind(this)}
-                        onKeyPress={this.handleKeyPress.bind(this)}
-                        placeholder="Type your message..."
-                        maxLength={2048}
-                    />
-                    <button onClick={this.sendMessage.bind(this)}>Send</button>
-                </div>
+            <div className="chat" role="application" aria-label="Chat">
+                <textarea
+                    autoFocus
+                    value={message}
+                    onChange={this.handleInputChange.bind(this)}
+                    onKeyPress={this.handleKeyPress.bind(this)}
+                    placeholder="Type your message..."
+                    maxLength={2048}
+                />
+                <button onClick={this.sendMessage.bind(this)}>Send</button>
             </div>
         );
     }

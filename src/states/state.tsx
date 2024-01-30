@@ -1,4 +1,4 @@
-import React, { Component, ReactNode } from "react";
+import { ReactNode} from "react";
 import Game from "../game";
 export default class State {
     gui: ReactNode | null = null;
@@ -11,5 +11,6 @@ export default class State {
     onCover(): void {}
     onUncover(): void {}
     onPop(): void {}
-    update(delta: number, events: UIEvent[]): void {}
+    onEscape(): void {}
+    update(delta: number, events: KeyboardEvent[]): void {}
 }
