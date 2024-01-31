@@ -85,12 +85,14 @@ export default class Map extends BoundedBox {
     sendEntitiesToPlayer(player: Player) {
         const everythingElse: Object[] = [];
         this.entities.forEach((otherEntity) => {
-            everythingElse.push({
-                id: otherEntity.id,
-                x: otherEntity.x,
-                y: otherEntity.y,
-                z: otherEntity.z,
-            });
+            if (otherEntity.id != player.id) {
+                everythingElse.push({
+                    id: otherEntity.id,
+                    x: otherEntity.x,
+                    y: otherEntity.y,
+                    z: otherEntity.z,
+                });
+            }
         });
         player.user.sendEvent("spawnEntities", {
             entities: everythingElse,
