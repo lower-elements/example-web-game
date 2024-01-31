@@ -27,14 +27,17 @@ export default class Player extends Entity {
     }
     changeMap(newMap: Map): void {
         this.map.removeEntity(this);
-        newMap.addEntity(this);
-        this.map = newMap;
         this.reloadMap();
+        this.map = newMap;
+        newMap.addEntity(this);
     }
-    reloadMap(): void {
+    reloadMap(resendEntities: boolean = false): void {
         this.user.sendEvent("loadMap", {
             map: this.map.dump(),
             position: { x: this.x, y: this.y, z: this.z },
         });
+        if (resendEntities) {
+            this.map.sendEntitiesToPlayer(this);
+        }
     }
 }

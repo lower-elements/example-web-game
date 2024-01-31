@@ -82,7 +82,7 @@ export default class Map extends BoundedBox {
         this.entities.add(entity);
         return entity;
     }
-    private sendEntitiesToPlayer(player: Player) {
+    sendEntitiesToPlayer(player: Player) {
         const everythingElse: Object[] = [];
         this.entities.forEach((otherEntity) => {
             everythingElse.push({

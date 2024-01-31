@@ -101,7 +101,7 @@ export default class Server {
     private acceptConnection(ws: WebSocket, user: User) {
         user.setSocket(ws);
         this.addUser(user);
-        user.player?.reloadMap();
+        user.player?.reloadMap(true);
         console.log(
             `WebSocket connected, welcome ${user.info.username}, ${user.info.email}. Password hash: ${user.info.password}`
         );
