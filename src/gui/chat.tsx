@@ -38,6 +38,7 @@ export default class ChatGui extends React.Component<
         return (
             <div className="chat" role="application" aria-label="Chat">
                 <textarea
+                    spellCheck
                     autoFocus
                     value={message}
                     onChange={this.handleInputChange.bind(this)}
