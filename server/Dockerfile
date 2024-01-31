@@ -4,4 +4,5 @@ ADD . /app
 WORKDIR /app
 RUN npm install
 EXPOSE 3000
-ENTRYPOINT ["npm", "start"]
+RUN npx tsc
+ENTRYPOINT ["node", "dist/index.js"]

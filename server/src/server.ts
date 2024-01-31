@@ -158,8 +158,11 @@ export default class Server {
     async shutDown(): Promise<void> {
         this.stopMainLoop();
         this.wss.close();
-        this.server.closeAllConnections();
-        this.users.forEach(async (user) => await user.save());
+        this.server.close();
+        for (let user of this.users){
+            await user.save();
+        }
+        await this.database.close();
     }
     private async onsignup(
         req: Request,

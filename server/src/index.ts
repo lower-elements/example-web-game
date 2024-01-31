@@ -8,8 +8,9 @@ async function main(): Promise<void> {
     const server = new Server(PORT, await mongoClient.connect());
     console.log("Connected to database...");
     await server.start();
-    process.on("SIGTERM", () => {
-        server.shutDown();
+    process.on("SIGINT", async () => {
+        console.log("shutting down...");
+        await server.shutDown();
         process.exit(0);
     });
 }
