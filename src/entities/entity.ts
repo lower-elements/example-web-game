@@ -1,9 +1,9 @@
 import { Timer, randint } from "../utils";
 import Map from "../map";
-import AudioSource from "../audio_source";
+import AudioSource from "../audio/audio_source";
 import Game from "../game";
 import EventEmitter from "../event_emitter";
-import SoundEmitter from "../sound_emitter";
+import SoundEmitter from "../audio/sound_emitter";
 export default class Entity extends EventEmitter<Entity> {
     protected game: Game;
     protected _x: number = 0;
@@ -49,6 +49,12 @@ export default class Entity extends EventEmitter<Entity> {
     playSound(path: string, looping: boolean = false): AudioSource {
         return this.soundEmitter.playSound(path, looping);
     }
+    playSoundOneShot(
+        path: string,
+        looping: boolean = false
+    ): Promise<AudioBufferSourceNode> {
+        return this.soundEmitter.playSoundOneShot(path, looping);
+    }
     get x(): number {
         return this._x;
     }
@@ -84,7 +90,7 @@ export default class Entity extends EventEmitter<Entity> {
         let platform = this.map.getPlatformAt(x, y, z);
         let result = platform ? platform.type : "air";
         if (playSound && result != "air") {
-            this.playSound(`steps/${result}/${randint(1, 5)}.ogg`);
+            this.playSoundOneShot(`steps/${result}/${randint(1, 5)}.ogg`);
         }
         this.fireEvent("move");
     }

@@ -1,7 +1,7 @@
 import Entity from "./entity";
 import { Timer, randint } from "../utils";
 import Map from "../map";
-import AudioSource from "../audio_source";
+import AudioSource from "../audio/audio_source";
 import Game from "../game";
 export default class Player extends Entity {
     protected _facing: number = 0;

@@ -1,24 +1,17 @@
 import State from "./state";
-import AudioSource from "../audio_source";
+import AudioSource from "../audio/audio_source";
 import speak from "../speech";
 import Game from "../game";
+import createOneShotSound from "../audio/one_shot_sound";
 export default class Menu extends State {
     private title: string;
     private items: MenuItem[] = [];
     private index: number = -1;
-    private moveSound: AudioSource;
-    private openSound: AudioSource;
+    private moveSoundPath: string = "menu/move.ogg";
+    private openSoundPath: string = "menu/open.ogg";
     constructor(game: Game, title: string) {
         super(game);
         this.title = title;
-        this.moveSound = new AudioSource(
-            this.game.audioContext,
-            "menu/move.ogg"
-        );
-        this.openSound = new AudioSource(
-            this.game.audioContext,
-            "menu/open.ogg"
-        );
     }
     setItems(items: MenuItem[]): void {
         this.items = items;
@@ -32,9 +25,13 @@ export default class Menu extends State {
         }
     }
     initialize(): void {}
-    onPush(): void {
+    async onPush(): Promise<void> {
+        await createOneShotSound(
+            this.game.audioContext,
+            this.openSoundPath,
+            true
+        );
         speak(this.title, true);
-        this.openSound.play();
     }
     onPop(): void {}
     onCover(): void {}
@@ -64,7 +61,7 @@ export default class Menu extends State {
     activateSelectedItem() {
         this.items[this.index].callback(this.game, this);
     }
-    setIndex(index: number): void {
+    async setIndex(index: number): Promise<void> {
         if (this.items.length === 0) {
             return;
         }
@@ -72,7 +69,11 @@ export default class Menu extends State {
             ((index % this.items.length) + this.items.length) %
             this.items.length;
         this.speakCurrentItem();
-        this.moveSound.play();
+        await createOneShotSound(
+            this.game.audioContext,
+            this.moveSoundPath,
+            true
+        );
     }
     speakCurrentItem(interupt: boolean = true): void {
         if (this.index >= 0) {

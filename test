@@ -1,0 +1,382 @@
+diff --git a/src/audio_source.ts b/src/audio_source.ts
+deleted file mode 100644
+index 47ef2b6..0000000
+--- a/src/audio_source.ts
++++ /dev/null
+@@ -1,59 +0,0 @@
+-/**
+- * Represents an audio source for playing a sound.
+- */
+-export default class AudioSource {
+-    /**
+-     * The {mediaElement} used for playback. Useful for controling playback.
+-     */
+-    public mediaElement: HTMLAudioElement;
+-    private source: MediaElementAudioSourceNode;
+-    private isConnectedToSomething: boolean = false;
+-    constructor(
+-        context: AudioContext,
+-        path: string,
+-        looping: boolean = false,
+-        autoConnectToSpeakers: boolean = true
+-    ) {
+-        this.mediaElement = new Audio(`sounds/${path}`);
+-        this.mediaElement.loop = looping;
+-        this.source = new MediaElementAudioSourceNode(context, {
+-            mediaElement: this.mediaElement,
+-        });
+-        if (autoConnectToSpeakers) {
+-            this.source.connect(context.destination);
+-        } else {
+-            this.isConnectedToSomething = false;
+-        }
+-    }
+-    /**
+-     * Plays the audio, or if its playing, restart from the start.
+-     */
+-    play(): void {
+-        this.mediaElement.currentTime = 0;
+-        this.mediaElement.play();
+-    }
+-    pause(): void {
+-        this.mediaElement.pause();
+-    }
+-    resume(): void {
+-        this.mediaElement.play();
+-    }
+-    stop(): void {
+-        this.mediaElement.pause();
+-        this.mediaElement.currentTime = 0;
+-    }
+-    connect(
+-        dist: AudioNode,
+-        output: number | undefined = undefined,
+-        input: number | undefined = undefined
+-    ): void {
+-        if (this.isConnectedToSomething) {
+-            this.disconnect(this.source.context.destination);
+-            this.isConnectedToSomething = false;
+-        }
+-        this.source.connect(dist, output, input);
+-    }
+-    disconnect(dist: AudioNode): void {
+-        this.source.disconnect(dist);
+-    }
+-}
+diff --git a/src/entities/entity.ts b/src/entities/entity.ts
+index 7933d6b..ac7cf86 100644
+--- a/src/entities/entity.ts
++++ b/src/entities/entity.ts
+@@ -1,9 +1,9 @@
+ import { Timer, randint } from "../utils";
+ import Map from "../map";
+-import AudioSource from "../audio_source";
++import AudioSource from "../audio/audio_source";
+ import Game from "../game";
+ import EventEmitter from "../event_emitter";
+-import SoundEmitter from "../sound_emitter";
++import SoundEmitter from "../audio/sound_emitter";
+ export default class Entity extends EventEmitter<Entity> {
+     protected game: Game;
+     protected _x: number = 0;
+@@ -49,6 +49,12 @@ export default class Entity extends EventEmitter<Entity> {
+     playSound(path: string, looping: boolean = false): AudioSource {
+         return this.soundEmitter.playSound(path, looping);
+     }
++    playSoundOneShot(
++        path: string,
++        looping: boolean = false
++    ): Promise<AudioBufferSourceNode> {
++        return this.soundEmitter.playSoundOneShot(path, looping);
++    }
+     get x(): number {
+         return this._x;
+     }
+@@ -84,7 +90,7 @@ export default class Entity extends EventEmitter<Entity> {
+         let platform = this.map.getPlatformAt(x, y, z);
+         let result = platform ? platform.type : "air";
+         if (playSound && result != "air") {
+-            this.playSound(`steps/${result}/${randint(1, 5)}.ogg`);
++            this.playSoundOneShot(`steps/${result}/${randint(1, 5)}.ogg`);
+         }
+         this.fireEvent("move");
+     }
+diff --git a/src/entities/player.ts b/src/entities/player.ts
+index 03ee4d2..350e781 100644
+--- a/src/entities/player.ts
++++ b/src/entities/player.ts
+@@ -1,7 +1,7 @@
+ import Entity from "./entity";
+ import { Timer, randint } from "../utils";
+ import Map from "../map";
+-import AudioSource from "../audio_source";
++import AudioSource from "../audio/audio_source";
+ import Game from "../game";
+ export default class Player extends Entity {
+     protected _facing: number = 0;
+diff --git a/src/event_handler.ts b/src/event_handler.ts
+index d96cfb7..28251f4 100644
+--- a/src/event_handler.ts
++++ b/src/event_handler.ts
+@@ -6,8 +6,9 @@ import { Buffer, BufferItem } from "./buffer";
+ import { ExportedMap } from "./exported_map_types";
+ import Entity from "./entities/entity";
+ import Player from "./entities/player";
+-import AudioSource from "./audio_source";
++import AudioSource from "./audio/audio_source";
+ import ServerInfo from "./states/server_info";
++import createOneShotSound from "./audio/one_shot_sound";
+ export type eventHandlerCallback = (
+     this: EventHandler,
+     data: Record<string, any>
+@@ -31,9 +32,9 @@ export default class EventHandler {
+         }
+     }
+     private eventBindings: EventHandlers = {
+-        speak(data) {
++        async speak(data) {
+             if (data.sound) {
+-                new AudioSource(this.game.audioContext, data.sound).play();
++                await createOneShotSound(this.game.audioContext, data.sound, true);
+             }
+             speak(data.text ?? "", data.interupt ?? true);
+             if (data.buffer) {
+diff --git a/src/map.ts b/src/map.ts
+index 0d202c5..853c313 100644
+--- a/src/map.ts
++++ b/src/map.ts
+@@ -6,6 +6,7 @@ import Zone from "./map_elements/zone";
+ import Gameplay from "./states/gameplay";
+ import Entity from "./entities/entity";
+ import { ExportedBoundedBox, ExportedMap } from "./exported_map_types";
++import getBuffer from "./audio/audio_buffers";
+ /**
+  * Represents the game's world map, with functions to spawning and querying map elements such as platforms, sound sources, zones, and entities.
+  */
+@@ -76,42 +77,24 @@ export default class Map extends BoundedBox {
+             }
+         });
+     }
+-    private loadFootsteps(): Promise<void> {
+-        return new Promise<void>((resolve, reject) => {
+-            if (!this.platforms.length) {
+-                return resolve();
+-            }
+-            const preloaders: HTMLAudioElement[] = [];
+-            for (let platform of this.platforms) {
+-                for (let index = 1; index <= 5; index++) {
+-                    preloaders.push(
+-                        new Audio(`sounds/steps/${platform.type}/${index}.ogg`)
+-                    );
+-                }
+-            }
+-            function areAllFootstepsReady(): boolean {
+-                for (let preloader of preloaders) {
+-                    if (preloader.readyState < 4) {
+-                        return false;
+-                    }
+-                }
+-                return true;
++    private async loadFootsteps(): Promise<void> {
++        const promises: Promise<AudioBuffer>[] = [];
++        const alreadyCheckedTypes: string[] = [];
++        for (let platform of this.platforms) {
++            if (alreadyCheckedTypes.includes(platform.type)) {
++                continue;
+             }
+-            for (let preloader of preloaders) {
+-                preloader.addEventListener(
+-                    "canplaythrough",
+-                    (_) => {
+-                        if (areAllFootstepsReady()) {
+-                            resolve();
+-                        }
+-                    },
+-                    { once: true }
++            alreadyCheckedTypes.push(platform.type);
++            for (let index = 1; index <= 5; index++) {
++                promises.push(
++                    getBuffer(
++                        this.gameplay.game.audioContext,
++                        `steps/${platform.type}/${index}.ogg`
++                    )
+                 );
+             }
+-            if (areAllFootstepsReady()) {
+-                resolve();
+-            }
+-        });
++        }
++        await Promise.all(promises);
+     }
+     /**
+      * Returns a generator iterating over all the entities inside a specific range.
+diff --git a/src/map_elements/sound_source.ts b/src/map_elements/sound_source.ts
+index 9682aa1..e189cf7 100644
+--- a/src/map_elements/sound_source.ts
++++ b/src/map_elements/sound_source.ts
+@@ -1,4 +1,4 @@
+-import AudioSource from "../audio_source";
++import AudioSource from "../audio/audio_source";
+ import Entity from "../entities/entity";
+ import EventEmitter, { EventCallback } from "../event_emitter";
+ import { ExportedSoundSource } from "../exported_map_types";
+diff --git a/src/sound_emitter.ts b/src/sound_emitter.ts
+deleted file mode 100644
+index 20ca639..0000000
+--- a/src/sound_emitter.ts
++++ /dev/null
+@@ -1,82 +0,0 @@
+-import AudioSource from "./audio_source";
+-
+-export default class SoundEmitter {
+-    protected audioContext: AudioContext;
+-    private gainNode: GainNode;
+-    private pannerNode: PannerNode;
+-    private isRewired: boolean = false;
+-    private animatePanning: boolean;
+-    private panningAnimationDuration = 0.02;
+-
+-    constructor(
+-        audioContext: AudioContext,
+-        x: number = 0,
+-        y: number = 0,
+-        z: number = 0,
+-        hrtf: boolean = true,
+-        animatePanning: boolean = true
+-    ) {
+-        this.audioContext = audioContext;
+-        this.gainNode = this.audioContext.createGain();
+-        this.pannerNode = this.audioContext.createPanner();
+-        this.pannerNode.panningModel = hrtf ? "HRTF" : "equalpower";
+-        this.pannerNode.connect(this.gainNode);
+-        this.gainNode.connect(this.audioContext.destination);
+-        this.pannerNode.positionX.value = x;
+-        this.pannerNode.positionY.value = y;
+-        this.pannerNode.positionZ.value = z;
+-        this.animatePanning = animatePanning;
+-    }
+-    rewireOutput(dist: AudioNode | null) {
+-        this.gainNode.disconnect();
+-        if (dist === null && this.isRewired) {
+-            this.gainNode.connect(this.audioContext.destination);
+-            this.isRewired = false;
+-        } else if (dist) {
+-            this.gainNode.connect(dist);
+-            this.isRewired = true;
+-        }
+-    }
+-    get x(): number {
+-        return this.pannerNode.positionX.value;
+-    }
+-    get y(): number {
+-        return this.pannerNode.positionY.value;
+-    }
+-    get z(): number {
+-        return this.pannerNode.positionZ.value;
+-    }
+-    set x(value: number) {
+-        if (this.animatePanning) {
+-            this.pannerNode.positionX.linearRampToValueAtTime(
+-                value,
+-                this.audioContext.currentTime + this.panningAnimationDuration
+-            );
+-        } else this.pannerNode.positionX.value = value;
+-    }
+-    set y(value: number) {
+-        if (this.animatePanning) {
+-            this.pannerNode.positionY.linearRampToValueAtTime(
+-                value,
+-                this.audioContext.currentTime + this.panningAnimationDuration
+-            );
+-        } else this.pannerNode.positionY.value = value;
+-    }
+-    set z(value: number) {
+-        if (this.animatePanning) {
+-            this.pannerNode.positionZ.linearRampToValueAtTime(
+-                value,
+-                this.audioContext.currentTime + this.panningAnimationDuration
+-            );
+-        } else this.pannerNode.positionZ.value = value;
+-    }
+-    attachSound(sound: AudioSource): void {
+-        sound.connect(this.pannerNode);
+-    }
+-    playSound(path: string, looping: boolean = false): AudioSource {
+-        let source = new AudioSource(this.audioContext, path, looping, false);
+-        this.attachSound(source);
+-        source.play();
+-        return source;
+-    }
+-}
+diff --git a/src/states/menu.ts b/src/states/menu.ts
+index 469347d..1267795 100644
+--- a/src/states/menu.ts
++++ b/src/states/menu.ts
+@@ -1,24 +1,17 @@
+ import State from "./state";
+-import AudioSource from "../audio_source";
++import AudioSource from "../audio/audio_source";
+ import speak from "../speech";
+ import Game from "../game";
++import createOneShotSound from "../audio/one_shot_sound";
+ export default class Menu extends State {
+     private title: string;
+     private items: MenuItem[] = [];
+     private index: number = -1;
+-    private moveSound: AudioSource;
+-    private openSound: AudioSource;
++    private moveSoundPath: string = "menu/move.ogg";
++    private openSoundPath: string = "menu/open.ogg";
+     constructor(game: Game, title: string) {
+         super(game);
+         this.title = title;
+-        this.moveSound = new AudioSource(
+-            this.game.audioContext,
+-            "menu/move.ogg"
+-        );
+-        this.openSound = new AudioSource(
+-            this.game.audioContext,
+-            "menu/open.ogg"
+-        );
+     }
+     setItems(items: MenuItem[]): void {
+         this.items = items;
+@@ -32,9 +25,13 @@ export default class Menu extends State {
+         }
+     }
+     initialize(): void {}
+-    onPush(): void {
++    async onPush(): Promise<void> {
++        await createOneShotSound(
++            this.game.audioContext,
++            this.openSoundPath,
++            true
++        );
+         speak(this.title, true);
+-        this.openSound.play();
+     }
+     onPop(): void {}
+     onCover(): void {}
+@@ -64,7 +61,7 @@ export default class Menu extends State {
+     activateSelectedItem() {
+         this.items[this.index].callback(this.game, this);
+     }
+-    setIndex(index: number): void {
++    async setIndex(index: number): Promise<void> {
+         if (this.items.length === 0) {
+             return;
+         }
+@@ -72,7 +69,11 @@ export default class Menu extends State {
+             ((index % this.items.length) + this.items.length) %
+             this.items.length;
+         this.speakCurrentItem();
+-        this.moveSound.play();
++        await createOneShotSound(
++            this.game.audioContext,
++            this.moveSoundPath,
++            true
++        );
+     }
+     speakCurrentItem(interupt: boolean = true): void {
+         if (this.index >= 0) {

@@ -1,4 +1,4 @@
-import AudioSource from "../audio_source";
+import AudioSource from "../audio/audio_source";
 import Entity from "../entities/entity";
 import EventEmitter, { EventCallback } from "../event_emitter";
 import { ExportedSoundSource } from "../exported_map_types";

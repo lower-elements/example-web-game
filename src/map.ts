@@ -6,6 +6,7 @@ import Zone from "./map_elements/zone";
 import Gameplay from "./states/gameplay";
 import Entity from "./entities/entity";
 import { ExportedBoundedBox, ExportedMap } from "./exported_map_types";
+import getBuffer from "./audio/audio_buffers";
 /**
  * Represents the game's world map, with functions to spawning and querying map elements such as platforms, sound sources, zones, and entities.
  */
@@ -76,42 +77,24 @@ export default class Map extends BoundedBox {
             }
         });
     }
-    private loadFootsteps(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (!this.platforms.length) {
-                return resolve();
+    private async loadFootsteps(): Promise<void> {
+        const promises: Promise<AudioBuffer>[] = [];
+        const alreadyCheckedTypes: string[] = [];
+        for (let platform of this.platforms) {
+            if (alreadyCheckedTypes.includes(platform.type)) {
+                continue;
             }
-            const preloaders: HTMLAudioElement[] = [];
-            for (let platform of this.platforms) {
-                for (let index = 1; index <= 5; index++) {
-                    preloaders.push(
-                        new Audio(`sounds/steps/${platform.type}/${index}.ogg`)
-                    );
-                }
-            }
-            function areAllFootstepsReady(): boolean {
-                for (let preloader of preloaders) {
-                    if (preloader.readyState < 4) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            for (let preloader of preloaders) {
-                preloader.addEventListener(
-                    "canplaythrough",
-                    (_) => {
-                        if (areAllFootstepsReady()) {
-                            resolve();
-                        }
-                    },
-                    { once: true }
+            alreadyCheckedTypes.push(platform.type);
+            for (let index = 1; index <= 5; index++) {
+                promises.push(
+                    getBuffer(
+                        this.gameplay.game.audioContext,
+                        `steps/${platform.type}/${index}.ogg`
+                    )
                 );
             }
-            if (areAllFootstepsReady()) {
-                resolve();
-            }
-        });
+        }
+        await Promise.all(promises);
     }
     /**
      * Returns a generator iterating over all the entities inside a specific range.

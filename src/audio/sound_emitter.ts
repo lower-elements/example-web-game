@@ -1,4 +1,6 @@
+import getBuffer from "./audio_buffers";
 import AudioSource from "./audio_source";
+import createOneShotSound from "./one_shot_sound";
 
 export default class SoundEmitter {
     protected audioContext: AudioContext;
@@ -70,13 +72,22 @@ export default class SoundEmitter {
             );
         } else this.pannerNode.positionZ.value = value;
     }
-    attachSound(sound: AudioSource): void {
+    attachSound(sound: AudioSource | AudioBufferSourceNode): void {
         sound.connect(this.pannerNode);
     }
     playSound(path: string, looping: boolean = false): AudioSource {
         let source = new AudioSource(this.audioContext, path, looping, false);
         this.attachSound(source);
         source.play();
+        return source;
+    }
+    async playSoundOneShot(
+        path: string,
+        looping: boolean = false
+    ): Promise<AudioBufferSourceNode> {
+        const source = await createOneShotSound(this.audioContext, path);
+        this.attachSound(source);
+        source.start();
         return source;
     }
 }
