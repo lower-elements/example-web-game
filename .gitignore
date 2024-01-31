@@ -132,3 +132,4 @@ dist
 # webpack and deployment
 dist
 dist.zip
+sounds/*
