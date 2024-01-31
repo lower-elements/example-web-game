@@ -34,7 +34,11 @@ export default class EventHandler {
     private eventBindings: EventHandlers = {
         async speak(data) {
             if (data.sound) {
-                await createOneShotSound(this.game.audioContext, data.sound, true);
+                await createOneShotSound(
+                    this.game.audioContext,
+                    data.sound,
+                    true
+                );
             }
             speak(data.text ?? "", data.interupt ?? true);
             if (data.buffer) {
@@ -80,7 +84,10 @@ export default class EventHandler {
                 ?.playSound(data.path, data.looping);
         },
         entityMove(data) {
-            const entity = this.gameplay.map?.getEntityById(data.id);
+            let entity = this.gameplay.map?.getEntityById(data.id);
+            if (!entity && data.id === this.gameplay.player?.id) {
+                entity = this.gameplay.player ?? undefined;
+            }
             if (entity) {
                 entity.move(
                     data.x,
