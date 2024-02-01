@@ -91,12 +91,16 @@ export default class EventHandler {
             if (!entity && data.id === this.gameplay.player?.id) {
                 entity = this.gameplay.player ?? undefined;
             }
-            if (entity) {
+            if (
+                entity &&
+                !entity.isSamePosition({ x: data.x, y: data.y, z: data.z })
+            ) {
                 entity.move(
                     data.x,
                     data.y,
                     data.z,
-                    data.playSound && !(entity instanceof Player, false)
+                    data.playSound && !(entity instanceof Player),
+                    false
                 );
             }
         },
