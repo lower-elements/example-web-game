@@ -1,8 +1,7 @@
 import Bcrypt from "bcrypt";
 import { Collection, ObjectId, WithId } from "mongodb";
 import { userInDatabase } from "./types";
-import { normalize } from "path";
-
+import { normalize } from "../utils";
 export default class Users {
     private readonly hashRounds = 12;
     private readonly collection: Collection<userInDatabase>;
