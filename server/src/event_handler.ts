@@ -46,7 +46,7 @@ export default class EventHandler {
             } else if (
                 player &&
                 !player.canMove &&
-                !player.isSamePosition(data.position)
+                !player.isSamePosition({ x: data.x, y: data.y, z: data.z })
             ) {
                 player.sendMovementEvent(false);
             }

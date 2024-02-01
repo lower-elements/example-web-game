@@ -5,4 +5,4 @@ WORKDIR /app
 RUN npm install
 EXPOSE 3000
 RUN npx tsc
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT ["node", "--enable-source-maps", "dist/index.js"]
