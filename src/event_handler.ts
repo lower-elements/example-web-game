@@ -55,6 +55,9 @@ export default class EventHandler {
         },
         loadMap(data) {
             this.gameplay.loadMap(data.map, data.position);
+            if (this.gameplay.player) {
+                this.gameplay.player.id = data.playerId ?? "player";
+            }
         },
         spawnEntities(data) {
             for (let entity of data.entities) {

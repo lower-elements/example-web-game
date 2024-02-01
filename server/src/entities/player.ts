@@ -35,6 +35,7 @@ export default class Player extends Entity {
         this.user.sendEvent("loadMap", {
             map: this.map.dump(),
             position: { x: this.x, y: this.y, z: this.z },
+            playerId: this.id,
         });
         if (resendEntities) {
             this.map.sendEntitiesToPlayer(this);

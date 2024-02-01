@@ -27,7 +27,7 @@ export default class EventHandler {
             });
         },
         move(user, data) {
-            let {player} = user;
+            let { player } = user;
             if (player && player.canMove) {
                 switch (data.direction) {
                     case "forward":
@@ -43,6 +43,12 @@ export default class EventHandler {
                         player.move(player.x - 1, player.y, player.z);
                         break;
                 }
+            } else if (
+                player &&
+                !player.canMove &&
+                !player.isSamePosition(data.position)
+            ) {
+                player.sendMovementEvent(false);
             }
         },
         getServerInfo(user, data) {

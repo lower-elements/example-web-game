@@ -1,15 +1,16 @@
 import { WebSocket } from "ws";
-import { UserInfo } from "./database";
+import { userInDatabase } from "./database/types";
 import Server from "./server";
 import { Timer } from "./utils";
 import Player from "./entities/player";
+import { WithId } from "mongodb";
 export default class User {
-    info: UserInfo;
+    info: WithId<userInDatabase>;
     player?: Player;
     private server: Server;
     private socket?: WebSocket;
     readonly pingTimer: Timer = new Timer();
-    constructor(server: Server, info: UserInfo) {
+    constructor(server: Server, info: WithId<userInDatabase>) {
         this.server = server;
         this.info = info;
     }

@@ -97,6 +97,9 @@ export default class Entity extends EventEmitter<Entity> {
     protected fireEvent(event: string) {
         this.emit(event, this);
     }
+    isSamePosition(other: { x: number; y: number; z: number }): boolean {
+        return other.x === this.x && other.y === this.y && other.z === this.z;
+    }
     destroy() {
         this.map.removeEntity(this);
     }
