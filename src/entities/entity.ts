@@ -76,14 +76,22 @@ export default class Entity extends EventEmitter<Entity> {
         this._z = value;
         this.soundEmitter.z = value;
     }
-    move(x: number, y: number, z: number, playSound: boolean = true): void {
+    move(
+        x: number,
+        y: number,
+        z: number,
+        playSound: boolean = true,
+        resetMovementTimer: boolean = true
+    ): void {
         if (!this.map.inBound(x, y, z)) {
             return;
         }
-        if (!this.map.entities.move(this, this)) {
+        if (!this.map.entities.move(this, { x: x, y: y })) {
             return;
         }
-        this.movementTimer.restart();
+        if (resetMovementTimer) {
+            this.movementTimer.restart();
+        }
         this.x = x;
         this.y = y;
         this.z = z;
