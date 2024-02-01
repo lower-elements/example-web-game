@@ -18,7 +18,7 @@ export default class User {
         this.player = player;
     }
     save(): Promise<boolean> {
-        return this.server.database.replaceUserByEmail(
+        return this.server.database.users.replaceUserByEmail(
             this.info.email,
             this.info
         );

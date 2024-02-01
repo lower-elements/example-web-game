@@ -33,7 +33,7 @@ export default class Server {
         // This will be removed soon, currently as a placeholder until we have dynamic map loading.
         const testMap: Map = new Map(this, 0, 25, 0, 25, 0, 25);
         testMap.spawnPlatform(0, 25, 0, 25, 0, 0, "grass");
-        this.maps = {main: testMap};
+        this.maps = { main: testMap };
         this.wss = new WebSocket.Server({
             server: this.server,
             maxPayload: 1024 * 1024, //1 megabytes
@@ -43,11 +43,19 @@ export default class Server {
     }
     addUser(user: User): void {
         this.users.add(user);
-        this.sendEventToAll("speak", {text: `${user.info.username} just came online`, buffer: "Public chat", sound: "ui/online.ogg"})
+        this.sendEventToAll("speak", {
+            text: `${user.info.username} just came online`,
+            buffer: "Public chat",
+            sound: "ui/online.ogg",
+        });
     }
     removeUser(user: User): void {
         this.users.delete(user);
-        this.sendEventToAll("speak", {text: `${user.info.username} just went offline`, buffer: "Public chat", sound: "ui/offline.ogg"})
+        this.sendEventToAll("speak", {
+            text: `${user.info.username} just went offline`,
+            buffer: "Public chat",
+            sound: "ui/offline.ogg",
+        });
     }
     sendEventToAll(event: string, data: Object) {
         this.users.forEach((user) => user.sendEvent(event, data));
@@ -82,13 +90,21 @@ export default class Server {
         try {
             if (cookies) {
                 const userInfoCookie = Cookie.parse(cookies);
-                const userInfo = await this.database.getUserByEmailAndPassword(
-                    userInfoCookie.email,
-                    userInfoCookie.password
-                );
+                const userInfo =
+                    await this.database.users.getUserByEmailAndPassword(
+                        userInfoCookie.email,
+                        userInfoCookie.password
+                    );
                 if (userInfo) {
                     const user = new User(this, userInfo);
-                    const player = new Player(this, user, 13, 13, 0, this.maps.main);
+                    const player = new Player(
+                        this,
+                        user,
+                        13,
+                        13,
+                        0,
+                        this.maps.main
+                    );
                     return this.acceptConnection(ws, user);
                 }
             }
@@ -160,7 +176,7 @@ export default class Server {
         this.stopMainLoop();
         this.wss.close();
         this.server.close();
-        for (let user of this.users){
+        for (let user of this.users) {
             await user.save();
         }
         await this.database.close();
@@ -174,7 +190,7 @@ export default class Server {
             return null;
         }
         try {
-            const userCreated = await this.database.insertUser({
+            const userCreated = await this.database.users.insertUser({
                 email,
                 username,
                 password,
@@ -207,7 +223,8 @@ export default class Server {
             return null;
         }
         try {
-            const user = await this.database.getUserByEmailAndPassword(
+            console.log(typeof this.database.users, Object.keys(this.database.users), this.database.users);
+            const user = await this.database.users.getUserByEmailAndPassword(
                 email,
                 password
             );

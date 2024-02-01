@@ -1,3 +1,7 @@
+export function normalize(what: string): string {
+    return what.toLowerCase();
+}
+
 export function randint(min: number, max: number): number {
     // Ensure min and max are integers
     const minInt = Math.ceil(min);
