@@ -7,6 +7,7 @@ export default class Users {
     private readonly collection: Collection<userInDatabase>;
     constructor(collection: Collection<userInDatabase>) {
         this.collection = collection;
+        this.collection.createIndex({ email: 1, normalizedUsername: 1 });
     }
     async getUserByEmail(
         email: string
